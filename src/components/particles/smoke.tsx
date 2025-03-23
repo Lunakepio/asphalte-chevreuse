@@ -1,44 +1,84 @@
-import { useRef, useEffect } from "react";
-import { InstancedMesh } from "three";
-import * as THREE from "three";
-import { useFrame, useLoader } from "@react-three/fiber";
-import { Billboard } from "@react-three/drei";
 
-export const Smoke = ({ count = 1000 }) => {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const dummy = new THREE.Object3D();
-  const texture = useLoader(THREE.TextureLoader, "/smoke.png");
+import { Euler, Object3D, Vector3, Matrix4, DoubleSide, Quaternion, TextureLoader, BackSide } from 'three'
+import { useRef, useLayoutEffect } from 'react'
+import { useFrame, useLoader } from '@react-three/fiber'
 
-  useEffect(() => {
-    if (!meshRef.current) return;
 
-    for (let i = 0; i < count; i++) {
-      dummy.position.set(
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10
-      );
-      dummy.updateMatrix();
-      meshRef.current.setMatrixAt(i, dummy.matrix);
+
+
+
+const e = new Euler()
+const m = new Matrix4()
+const o = new Object3D()
+const v = new Vector3()
+const q = new Quaternion()
+
+// testing
+
+export const Smoke =({exhaustRef}) => {
+  const count = 500
+  const opacity = 0.1
+  const size = 0.2
+  const smoke01 = useLoader(TextureLoader, '/smoke.png');
+
+
+  const texture = smoke01;
+  const ref = useRef(null);
+  let index = 0
+  let time = 0
+  let i = 0
+  useFrame((state,delta ) => {
+    if(!exhaustRef.current || !ref.current) return
+
+    const rotation = exhaustRef.current.rotation.y
+    if (state.clock.getElapsedTime() - time > 0.02) {
+      time = state.clock.getElapsedTime()
+      setItemAt(ref.current, rotation, exhaustRef.current, index++);
+      setItemAt(ref.current, rotation, exhaustRef.current, index++);
+      
+      if (index === count) index = 0
+    } else {
+      // Shrink old one
+      for (i = 0; i < count; i++) {
+        const direction = new Vector3(Math.sin(time * 6 + i * 10) , 2, 0);
+        ref.current.getMatrixAt(i, m)
+        m.decompose(o.position, q, v)
+        // o.scale.setScalar(Math.max(0, v.x - 0.005))
+        o.position.addScaledVector(direction, 0.01)
+        o.updateMatrix()
+        ref.current.setMatrixAt(i, o.matrix)
+        ref.current.instanceMatrix.needsUpdate = true
+      }
     }
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  }, [count]);
+  })
 
-  // Optional animation using useFrame (if needed)
-  useFrame(() => {
-    if (!meshRef.current) return;
-  });
+  useLayoutEffect(() => {
+    if(ref.current){
+      ref.current.geometry.rotateY(-Math.PI / 2)
+      return () => {
+        ref.current.geometry.rotateY(Math.PI / 2)
+      }
+    }
+  })
 
   return (
-    <Billboard>    <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
+    <instancedMesh frustumCulled={false} ref={ref} args={[undefined, undefined, count]}>
+      <planeGeometry args={[size, size]} />
+      <meshBasicMaterial color={0xffffff} transparent map={smoke01} opacity={1} depthWrite={false} side={DoubleSide} />
+    </instancedMesh>
+  )
+}
+
+function setItemAt(instances, rotation, body, index) {
+  const randomOffset = (Math.random() - 0.5) * 0.3 ;
+  const pos = body.getWorldPosition(v)
+  o.rotation.set(0, rotation + Math.PI / 2, 0);
   
-    <planeGeometry args={[0.6, 0.6]} />
-    <meshStandardMaterial
-      color="white"
-      map={texture}
-      side={THREE.DoubleSide}
-      transparent
-    />
-</instancedMesh></Billboard>
-  );
-};
+  // pos.y += randomOffset
+  pos.z += randomOffset
+  o.position.copy(pos);
+  o.scale.setScalar(1)
+  o.updateMatrix()
+  instances.setMatrixAt(index, o.matrix)
+  instances.instanceMatrix.needsUpdate = true
+}

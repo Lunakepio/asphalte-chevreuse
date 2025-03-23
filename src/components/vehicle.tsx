@@ -85,6 +85,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const cameraPositionRef = useRef<Mesh>(null);
     const cameraTargetRef = useRef<Mesh>(null);
     const chassisMeshRef = useRef<Mesh>(null);
+    const exhaustRef = useRef<Mesh>(null);
 
     const topLeftWheelObject = useRef<Group>(null!);
     const topRightWheelObject = useRef<Group>(null!);
@@ -306,13 +307,13 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       }
 
       if (afkTimer > afkThreshold) {
-        afk = true;
-        if (state.camera.position.y >= 6) {
-          const positionTarget = chassisMeshRef.current
-            .getWorldPosition(new Vector3())
-            .add(data[currentPoint]);
-          state.camera.position.copy(positionTarget);
-        }
+        // afk = true;
+        // if (state.camera.position.y >= 6) {
+        //   const positionTarget = chassisMeshRef.current
+        //     .getWorldPosition(new Vector3())
+        //     .add(data[currentPoint]);
+        //   state.camera.position.copy(positionTarget);
+        // }
       }
 
       if (!afk) {
@@ -405,9 +406,11 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           {/* Collider */}
           {/* todo: change to convex hull */}
           <CuboidCollider args={[2, 0.4, 0.7]} />
-          {/* <M3 /> */}
-          <Smoke chassisMeshRef={chassisMeshRef}/>
+          <M3 />
+          
           <mesh ref={chassisMeshRef}></mesh>
+          <mesh ref={exhaustRef} position={[-2.5, -0.15, -0.45]}>
+          </mesh>
 
           {/* Headlights */}
           {[
@@ -442,7 +445,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
           {/* Chassis */}
         </RigidBody>
-
+        <Smoke exhaustRef={exhaustRef}/>
         {/* Wheels */}
         <group ref={topLeftWheelObject}>
           <Wheel
