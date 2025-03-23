@@ -37,6 +37,7 @@ import { ThreeElements, useFrame } from "@react-three/fiber";
 import { WheelMesh } from "./wheel-mesh";
 import { spawn } from "../constants";
 import { data } from "../curve";
+import { Smoke } from "./particles/smoke";
 
 type WheelProps = ThreeElements["group"] & {
   side: "left" | "right";
@@ -85,17 +86,20 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const cameraTargetRef = useRef<Mesh>(null);
     const chassisMeshRef = useRef<Mesh>(null);
 
-
     const topLeftWheelObject = useRef<Group>(null!);
     const topRightWheelObject = useRef<Group>(null!);
     const bottomLeftWheelObject = useRef<Group>(null!);
     const bottomRightWheelObject = useRef<Group>(null!);
 
-    const { headlightsSpotLightHelper } = useLeva("headlights", {
-      headlightsSpotLightHelper: false,
-    }, {
-      collapsed: true,
-    });
+    const { headlightsSpotLightHelper } = useLeva(
+      "headlights",
+      {
+        headlightsSpotLightHelper: false,
+      },
+      {
+        collapsed: true,
+      }
+    );
     const cameraPositionControls = useLeva(
       "Camera Position",
       {
@@ -104,7 +108,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      },
+      }
     );
 
     const cameraLookAtControls = useLeva(
@@ -114,7 +118,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      },
+      }
     );
 
     const {
@@ -128,49 +132,58 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       vehicleFront,
       vehicleBack,
       ...levaWheelOptions
-    } = useLeva("wheels", {
-      radius: 0.38,
+    } = useLeva(
+      "wheels",
+      {
+        radius: 0.38,
 
-      indexRightAxis: 2,
-      indexForwardAxis: 0,
-      indexUpAxis: 1,
+        indexRightAxis: 2,
+        indexForwardAxis: 0,
+        indexUpAxis: 1,
 
-      directionLocal: [0, -1, 0],
-      axleLocal: [0, 0, 1],
+        directionLocal: [0, -1, 0],
+        axleLocal: [0, 0, 1],
 
-      suspensionStiffness: 20, // Softer suspension helps weight shift for turning
-      suspensionRestLength: 0.4, // More travel helps maintain tire contact
-      maxSuspensionForce: 100000, // Lower force to allow more movement
-      maxSuspensionTravel: 0.3, // Extra travel for smoother weight transfer
+        // Suspension settings: stiffer springs, reduced travel for less body roll
+        suspensionStiffness: 15, // increased stiffness for better grip and responsiveness
+        suspensionRestLength: 0.35, // shorter rest length for a firmer feel
+        maxSuspensionForce: 60000, // higher force to maintain control under load
+        maxSuspensionTravel: 0.7, // reduced travel to limit excessive body movement
 
-      sideFrictionStiffness: 1.2, // Reduced grip to allow some drift at high speed
-      frictionSlip: 1.2, // Less slip means better lateral control, but not too much
-      dampingRelaxation: 2.5, // Balances response and smoothness
-      dampingCompression: 5.0, // Softer compression allows more movement when turning
+        // Tire friction settings: more lateral grip and less slip
+        sideFrictionStiffness: 2.3, // increased lateral grip for fast cornering
+        frictionSlip: 1.4, // lower slip for improved traction during aggressive driving
 
-      rollInfluence: 0.005, // Reduce roll resistance to allow natural weight shift
+        // Damping adjustments: a bit higher to quickly settle the suspension
+        dampingRelaxation: 3.5, // increased for faster recovery after bumps
+        dampingCompression: 3.5, // matching compression damping for balanced behavior
 
-      customSlidingRotationalSpeed: -40, // Allow more sliding to help with turning
-      useCustomSlidingRotationalSpeed: false,
+        rollInfluence: 0.02, // lower roll influence to minimize body roll
 
-      forwardAcceleration: 1,
-      sideAcceleration: 3.0, // Increase lateral acceleration to improve turning response
+        customSlidingRotationalSpeed: -15, // reduced sliding tendency for a grip car feel
+        useCustomSlidingRotationalSpeed: true,
 
-      vehicleWidth: 1.33,
-      vehicleHeight: 0.05,
-      vehicleFront: -1.13,
-      vehicleBack: 1.38,
-    }, {
-      collapsed: true,
-    });
+        // Acceleration settings: sharper throttle response for performance
+        forwardAcceleration: 2, // increased engine force for rapid acceleration
+        sideAcceleration: 2.5, // slightly lower to help keep the car stable in turns
+
+        vehicleWidth: 1.33,
+        vehicleHeight: 0.05,
+        vehicleFront: -1.13,
+        vehicleBack: 1.38,
+      },
+      {
+        collapsed: true,
+      }
+    );
 
     const directionLocal = useMemo(
       () => new Vector3(...directionLocalArray),
-      [directionLocalArray],
+      [directionLocalArray]
     );
     const axleLocal = useMemo(
       () => new Vector3(...axleLocalArray),
-      [axleLocalArray],
+      [axleLocalArray]
     );
 
     const commonWheelOptions = {
@@ -187,7 +200,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleBack,
             vehicleHeight,
-            vehicleWidth * 0.5,
+            vehicleWidth * 0.5
           ),
         },
       },
@@ -198,7 +211,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleBack,
             vehicleHeight,
-            vehicleWidth * -0.5,
+            vehicleWidth * -0.5
           ),
         },
       },
@@ -209,7 +222,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleFront,
             vehicleHeight,
-            vehicleWidth * 0.5,
+            vehicleWidth * 0.5
           ),
         },
       },
@@ -220,7 +233,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleFront,
             vehicleHeight,
-            vehicleWidth * -0.5,
+            vehicleWidth * -0.5
           ),
         },
       },
@@ -275,10 +288,15 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     let afkTimer = 0;
     const afkThreshold = 4;
     const [, get] = useKeyboardControls();
-    const cameraSpeedFactor = 0.02;
+    const cameraSpeedFactor = 0.007;
     let currentPoint = data.length - 1;
     useFrame((state, delta) => {
-      if (!cameraPositionRef.current || !cameraTargetRef.current || !chassisMeshRef.current) return;
+      if (
+        !cameraPositionRef.current ||
+        !cameraTargetRef.current ||
+        !chassisMeshRef.current
+      )
+        return;
       const deltaAdjusted = delta * 60;
       afkTimer += delta;
       const { forward, back, left, right, brake } = get();
@@ -289,7 +307,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
       if (afkTimer > afkThreshold) {
         afk = true;
-        if(state.camera.position.y >= 6){
+        if (state.camera.position.y >= 6) {
           const positionTarget = chassisMeshRef.current
             .getWorldPosition(new Vector3())
             .add(data[currentPoint]);
@@ -300,28 +318,26 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       if (!afk) {
         state.camera.position.lerp(
           cameraPositionRef.current.getWorldPosition(new Vector3()),
-          0.12 * deltaAdjusted,
+          0.12 * deltaAdjusted
         );
         state.camera.lookAt(
-          cameraTargetRef.current.getWorldPosition(new Vector3()),
+          cameraTargetRef.current.getWorldPosition(new Vector3())
         );
       }
 
       if (afk) {
         state.camera.lookAt(
-          chassisMeshRef.current.getWorldPosition(new Vector3()),
+          chassisMeshRef.current.getWorldPosition(new Vector3())
         );
-        
+
         if (currentPoint > 0) {
-          const previousPoint = chassisMeshRef.current
-            .getWorldPosition(new Vector3())
-            .add(data[currentPoint + 1] || data[currentPoint]);
+
           const positionTarget = chassisMeshRef.current
             .getWorldPosition(new Vector3())
             .add(data[currentPoint]);
 
-          const distanceToPrev = previousPoint.distanceTo(positionTarget);
-
+          const distanceToPrev =
+            state.camera.position.distanceTo(positionTarget);
 
           const discontinuityThreshold = 1.0; // Adjust as needed
 
@@ -330,7 +346,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           } else {
             state.camera.position.lerp(
               positionTarget,
-              cameraSpeedFactor * deltaAdjusted,
+              cameraSpeedFactor * deltaAdjusted
             );
           }
 
@@ -344,17 +360,24 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           state.camera.position.copy(
             chassisMeshRef.current
               .getWorldPosition(new Vector3())
-              .add(data[currentPoint]),
+              .add(data[currentPoint])
           );
         }
       }
 
       const bodyPosition = chassisRigidBodyRef.current.translation();
+      // const yaw = chassisRigidBodyRef.current.rotation().y;
+
+      // chassisRigidBodyRef.current.applyImpulse(
+      //   new Vector3(-yaw * 0.02, 0, 0),
+      //   true
+      // );
+
 
       if (bodyPosition.y < -10) {
         chassisRigidBodyRef.current.setTranslation(
           new Vector3(...spawn.position),
-          true,
+          true
         );
         const spawnRot = new Euler(...spawn.rotation);
         const spawnQuat = new Quaternion().setFromEuler(spawnRot);
@@ -382,7 +405,8 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           {/* Collider */}
           {/* todo: change to convex hull */}
           <CuboidCollider args={[2, 0.4, 0.7]} />
-          <M3 />
+          {/* <M3 /> */}
+          <Smoke chassisMeshRef={chassisMeshRef}/>
           <mesh ref={chassisMeshRef}></mesh>
 
           {/* Headlights */}
@@ -405,7 +429,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
                 decay={0.1}
                 castShadow={idx === 0}
                 penumbra={0.8}
-                intensity={100}
+                intensity={63}
                 color={0xffc562}
                 shadow-mapSize-height={4096}
                 shadow-mapSize-width={4096}
@@ -450,5 +474,5 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         </group>
       </>
     );
-  },
+  }
 );

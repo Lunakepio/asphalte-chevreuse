@@ -28,8 +28,8 @@ export const PlayerController = () => {
 
   const { maxForce, maxSteer, maxBrake } = useLeva("controls", {
     maxForce: 12.5,
-    maxSteer: { value: Math.PI / 6, min: 0, max: Math.PI / 6 },
-    maxBrake: 0.6,
+    maxSteer: { value: Math.PI / 12, min: 0, max: Math.PI / 6 },
+    maxBrake: 0.15,
   }, {
     collapsed: true,
   });
@@ -55,7 +55,7 @@ export const PlayerController = () => {
     
     const deltaAdjusted = deltaTime * 60;
 
-    const { forward, back, left, right, brake } = get();
+    const { forward, back, left, right, brake, handbrake } = get();
 
     const {
       wheels,
@@ -71,8 +71,11 @@ export const PlayerController = () => {
     if (back) {
       engineForce -= maxForce;
     }
+    if(brake){
+      // engineForce -= maxForce;
+    }
 
-    currentSteering.current = MathUtils.lerp(currentSteering.current, left ? maxSteer : right ? -maxSteer : 0, 0.005 * deltaAdjusted);
+    currentSteering.current = MathUtils.lerp(currentSteering.current, left ? maxSteer : right ? -maxSteer : 0, 0.015 * deltaAdjusted);
 
     // console.log(vehicle, currentSteering.current);
 
@@ -80,8 +83,13 @@ export const PlayerController = () => {
 
     vehicle.setBrakeValue(brakeForce * 0.6, 0);
     vehicle.setBrakeValue(brakeForce * 0.6, 1);
-    vehicle.setBrakeValue(brakeForce * 0.4, 2);
-    vehicle.setBrakeValue(brakeForce * 0.4, 3);
+    vehicle.setBrakeValue(brakeForce * 0.2, 2);
+    vehicle.setBrakeValue(brakeForce * 0.2, 3);
+
+    if(handbrake){
+      vehicle.setBrakeValue(brakeForce * 10, 2);
+      vehicle.setBrakeValue(brakeForce * 10, 3);
+    }
 
 
     // console.log(vehicle.state.currentVehicleSpeedKmHour);
@@ -102,8 +110,6 @@ export const PlayerController = () => {
       wheelObject.position.copy(wheelState.worldTransform.position);
       wheelObject.quaternion.copy(wheelState.worldTransform.quaternion);
     }
-
-    // update brake lights
 
 
   });

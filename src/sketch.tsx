@@ -1,14 +1,16 @@
-import { Canvas } from "@react-three/fiber";
-import { Physics } from "@react-three/rapier";
+import { Canvas, useLoader } from "@react-three/fiber";
+import { Physics, CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Environment, KeyboardControls } from "@react-three/drei";
 import { useControls as useLeva } from "leva";
 import { Suspense } from "react";
 import { PlayerController } from "./PlayerController";
 import { Lighting } from "./Lighting";
+import { TextureLoader } from "three";
 
 import { Chevreuse } from "./components/Chevreuse";
 
-// import { Composer } from "./components/postprocessing/composer";
+import { Composer } from "./components/postprocessing/composer";
+import { spawn } from "./constants";
 
 export const Sketch = () => {
   const { debug } = useLeva("physics", {
@@ -23,12 +25,15 @@ export const Sketch = () => {
     { name: "left", keys: ["ArrowLeft", "KeyA"] },
     { name: "right", keys: ["ArrowRight", "KeyD"] },
     { name: "brake", keys: ["Space"] },
+    { name: "handbrake", keys: ["Shift"] },
     { name: "reset", keys: ["KeyR"] },
   ];
+
+  const texture = useLoader(TextureLoader, "/grid.jpg");
   
   return (
     <>
-      <Canvas shadows camera={{fov:44}} gl={{ antialias: true, powerPreference: "high-performance" }}>
+      <Canvas shadows camera={{fov:90}} gl={{ antialias: true, powerPreference: "high-performance" }}>
         <color attach="background" args={["#005249"]} />
         <fog attach="fog" args={["#002523", 50, 150]} />
         <Suspense fallback={null}>
@@ -39,22 +44,21 @@ export const Sketch = () => {
             {/* ground */}
             {/* <RigidBody
               type="fixed"
-              position-z={75}
-              position-y={-5}
+              position={[spawn.position[0], spawn.position[1] - 10, spawn.position[2]]}
               colliders={false}
               friction={1}
             >
               <CuboidCollider args={[120, 5, 120]} />
               <mesh receiveShadow>
                 <boxGeometry args={[240, 10, 240]} />
-                <meshStandardMaterial color="#AA3030" />
+                <meshStandardMaterial color="#AA3030" map={texture}/>
               </mesh>
             </RigidBody> */}
             <Chevreuse/>
           </Physics>
           <Lighting />
-          {/* <Composer/> */}
-          <Environment preset="night" environmentIntensity={0.5} background/>
+          <Composer/>
+          <Environment preset="night" environmentIntensity={0.5}/>
           {/* <Perf/> */}
         </Suspense>
       </Canvas>
