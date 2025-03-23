@@ -1,361 +1,454 @@
-import { Helper, useGLTF } from '@react-three/drei'
-import { CuboidCollider, RapierRigidBody, RigidBody, RigidBodyProps, useRapier } from '@react-three/rapier'
-import { useControls as useLeva } from 'leva'
-import { Fragment, RefObject, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Color, Group, Mesh, MeshStandardMaterial, Object3D, SpotLightHelper, Vector3, Vector3Tuple } from 'three'
-import { GLTF } from 'three-stdlib'
-import { RapierRaycastVehicle, WheelOptions } from '../lib/rapier-raycast-vehicle'
+import { Helper, useKeyboardControls } from "@react-three/drei";
+import {
+  CuboidCollider,
+  RapierRigidBody,
+  RigidBody,
+  RigidBodyProps,
+  useRapier,
+} from "@react-three/rapier";
+import { useControls as useLeva } from "leva";
+import {
+  Fragment,
+  RefObject,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  Color,
+  Group,
+  Mesh,
+  Object3D,
+  SpotLightHelper,
+  Vector3,
+  Vector3Tuple,
+  Euler,
+  Quaternion,
+} from "three";
+import {
+  RapierRaycastVehicle,
+  WheelOptions,
+} from "../lib/rapier-raycast-vehicle";
+import { M3 } from "./M3";
+import { ThreeElements, useFrame } from "@react-three/fiber";
+import { WheelMesh } from "./wheel-mesh";
+import { spawn } from "../constants";
+import { data } from "../curve";
 
-import chassisDracoUrl from '../assets/chassis-draco.glb?url'
-import wheelGlbUrl from '../assets/wheel-draco.glb?url'
-import { ThreeElements } from '@react-three/fiber'
-
-type WheelGLTF = GLTF & {
-    nodes: {
-        Mesh_14: Mesh
-        Mesh_14_1: Mesh
-    }
-    materials: {
-        'Material.002': MeshStandardMaterial
-        'Material.009': MeshStandardMaterial
-    }
-}
-
-interface ChassisGLTF extends GLTF {
-    nodes: {
-        Chassis_1: Mesh
-        Chassis_2: Mesh
-        Glass: Mesh
-        BrakeLights: Mesh
-        HeadLights: Mesh
-        Cabin_Grilles: Mesh
-        Undercarriage: Mesh
-        TurnSignals: Mesh
-        Chrome: Mesh
-        Wheel_1: Mesh
-        Wheel_2: Mesh
-        License_1: Mesh
-        License_2: Mesh
-        Cube013: Mesh
-        Cube013_1: Mesh
-        Cube013_2: Mesh
-        'pointer-left': Mesh
-        'pointer-right': Mesh
-    }
-    materials: {
-        BodyPaint: MeshStandardMaterial
-        License: MeshStandardMaterial
-        Chassis_2: MeshStandardMaterial
-        Glass: MeshStandardMaterial
-        BrakeLight: MeshStandardMaterial
-        defaultMatClone: MeshStandardMaterial
-        HeadLight: MeshStandardMaterial
-        Black: MeshStandardMaterial
-        Undercarriage: MeshStandardMaterial
-        TurnSignal: MeshStandardMaterial
-    }
-}
-
-type WheelProps = ThreeElements['group'] & {
-    side: 'left' | 'right'
-    radius: number
-}
+type WheelProps = ThreeElements["group"] & {
+  side: "left" | "right";
+  radius: number;
+};
 
 const Wheel = ({ side, radius, ...props }: WheelProps) => {
-    const groupRef = useRef<Group>(null!)
+  const groupRef = useRef<Group>(null!);
 
-    const { nodes, materials } = useGLTF(wheelGlbUrl) as WheelGLTF
-    const scale = radius / 0.34
+  const scale = radius / 0.28;
 
-    return (
-        <group {...props} ref={groupRef}>
-            <group scale={scale}>
-                <group scale={side === 'left' ? -1 : 1}>
-                    <mesh castShadow geometry={nodes.Mesh_14.geometry} material={materials['Material.002']} />
-                    <mesh castShadow geometry={nodes.Mesh_14_1.geometry} material={materials['Material.009']} />
-                </group>
-            </group>
+  return (
+    <group {...props} ref={groupRef}>
+      <group scale={scale}>
+        <group scale={side === "left" ? 1 : -1}>
+          <WheelMesh />
         </group>
-    )
-}
+      </group>
+    </group>
+  );
+};
 
-const BRAKE_LIGHTS_ON_COLOR = new Color(1, 0.2, 0.2).multiplyScalar(1.5)
-const BRAKE_LIGHTS_OFF_COLOR = new Color(0x333333)
+const BRAKE_LIGHTS_ON_COLOR = new Color(1, 0.2, 0.2).multiplyScalar(1.5);
+const BRAKE_LIGHTS_OFF_COLOR = new Color(0x333333);
 
 type RaycastVehicleWheel = {
-    options: WheelOptions
-    object: RefObject<Object3D>
-}
+  options: WheelOptions;
+  object: RefObject<Object3D>;
+};
 
-export type VehicleProps = RigidBodyProps
+export type VehicleProps = RigidBodyProps;
 
 export type VehicleRef = {
-    chassisRigidBody: RefObject<RapierRigidBody>
-    rapierRaycastVehicle: RefObject<RapierRaycastVehicle>
-    wheels: RaycastVehicleWheel[]
-    setBraking: (braking: boolean) => void
-}
+  chassisRigidBody: RefObject<RapierRigidBody>;
+  rapierRaycastVehicle: RefObject<RapierRaycastVehicle>;
+  wheels: RaycastVehicleWheel[];
+};
 
-export const Vehicle = forwardRef<VehicleRef, VehicleProps>(({ children, ...groupProps }, ref) => {
-    const rapier = useRapier()
+export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
+  ({ children, ...groupProps }, ref) => {
+    const rapier = useRapier();
 
-    const { nodes: n, materials: m } = useGLTF(chassisDracoUrl) as ChassisGLTF
+    const vehicleRef = useRef<RapierRaycastVehicle>(null!);
+    const chassisRigidBodyRef = useRef<RapierRigidBody>(null!);
+    const cameraPositionRef = useRef<Mesh>(null);
+    const cameraTargetRef = useRef<Mesh>(null);
+    const chassisMeshRef = useRef<Mesh>(null);
 
-    const vehicleRef = useRef<RapierRaycastVehicle>(null!)
-    const chassisRigidBodyRef = useRef<RapierRigidBody>(null!)
-    const brakeLightsRef = useRef<Mesh>(null!)
 
-    const topLeftWheelObject = useRef<Group>(null!)
-    const topRightWheelObject = useRef<Group>(null!)
-    const bottomLeftWheelObject = useRef<Group>(null!)
-    const bottomRightWheelObject = useRef<Group>(null!)
+    const topLeftWheelObject = useRef<Group>(null!);
+    const topRightWheelObject = useRef<Group>(null!);
+    const bottomLeftWheelObject = useRef<Group>(null!);
+    const bottomRightWheelObject = useRef<Group>(null!);
 
-    const { headlightsSpotLightHelper } = useLeva('headlights', {
-        headlightsSpotLightHelper: false,
-    })
+    const { headlightsSpotLightHelper } = useLeva("headlights", {
+      headlightsSpotLightHelper: false,
+    }, {
+      collapsed: true,
+    });
+    const cameraPositionControls = useLeva(
+      "Camera Position",
+      {
+        position: { value: [-17, 14, 0], step: 0.1 },
+        fov: { value: 44, min: 1, max: 180, step: 1 },
+      },
+      {
+        collapsed: true,
+      },
+    );
+
+    const cameraLookAtControls = useLeva(
+      "Camera Look At",
+      {
+        position: { value: [8, 1, 0], step: 0.1 },
+      },
+      {
+        collapsed: true,
+      },
+    );
 
     const {
-        indexRightAxis,
-        indexForwardAxis,
-        indexUpAxis,
-        directionLocal: directionLocalArray,
-        axleLocal: axleLocalArray,
-        vehicleWidth,
-        vehicleHeight,
-        vehicleFront,
-        vehicleBack,
-        ...levaWheelOptions
-    } = useLeva('wheels', {
-        radius: 0.38,
+      indexRightAxis,
+      indexForwardAxis,
+      indexUpAxis,
+      directionLocal: directionLocalArray,
+      axleLocal: axleLocalArray,
+      vehicleWidth,
+      vehicleHeight,
+      vehicleFront,
+      vehicleBack,
+      ...levaWheelOptions
+    } = useLeva("wheels", {
+      radius: 0.38,
 
-        indexRightAxis: 2,
-        indexForwardAxis: 0,
-        indexUpAxis: 1,
+      indexRightAxis: 2,
+      indexForwardAxis: 0,
+      indexUpAxis: 1,
 
-        directionLocal: [0, -1, 0],
-        axleLocal: [0, 0, 1],
+      directionLocal: [0, -1, 0],
+      axleLocal: [0, 0, 1],
 
-        suspensionStiffness: 30,
-        suspensionRestLength: 0.3,
-        maxSuspensionForce: 100000,
-        maxSuspensionTravel: 0.3,
+      suspensionStiffness: 20, // Softer suspension helps weight shift for turning
+      suspensionRestLength: 0.4, // More travel helps maintain tire contact
+      maxSuspensionForce: 100000, // Lower force to allow more movement
+      maxSuspensionTravel: 0.3, // Extra travel for smoother weight transfer
 
-        sideFrictionStiffness: 1,
-        frictionSlip: 1.4,
-        dampingRelaxation: 2.3,
-        dampingCompression: 4.4,
+      sideFrictionStiffness: 1.2, // Reduced grip to allow some drift at high speed
+      frictionSlip: 1.2, // Less slip means better lateral control, but not too much
+      dampingRelaxation: 2.5, // Balances response and smoothness
+      dampingCompression: 5.0, // Softer compression allows more movement when turning
 
-        rollInfluence: 0.01,
+      rollInfluence: 0.005, // Reduce roll resistance to allow natural weight shift
 
-        customSlidingRotationalSpeed: -30,
-        useCustomSlidingRotationalSpeed: true,
+      customSlidingRotationalSpeed: -40, // Allow more sliding to help with turning
+      useCustomSlidingRotationalSpeed: false,
 
-        forwardAcceleration: 1,
-        sideAcceleration: 1,
+      forwardAcceleration: 1,
+      sideAcceleration: 3.0, // Increase lateral acceleration to improve turning response
 
-        vehicleWidth: 1.7,
-        vehicleHeight: -0.3,
-        vehicleFront: -1.35,
-        vehicleBack: 1.3,
-    })
+      vehicleWidth: 1.33,
+      vehicleHeight: 0.05,
+      vehicleFront: -1.13,
+      vehicleBack: 1.38,
+    }, {
+      collapsed: true,
+    });
 
-    const directionLocal = useMemo(() => new Vector3(...directionLocalArray), [directionLocalArray])
-    const axleLocal = useMemo(() => new Vector3(...axleLocalArray), [axleLocalArray])
+    const directionLocal = useMemo(
+      () => new Vector3(...directionLocalArray),
+      [directionLocalArray],
+    );
+    const axleLocal = useMemo(
+      () => new Vector3(...axleLocalArray),
+      [axleLocalArray],
+    );
 
     const commonWheelOptions = {
-        ...levaWheelOptions,
-        directionLocal,
-        axleLocal,
-    }
+      ...levaWheelOptions,
+      directionLocal,
+      axleLocal,
+    };
 
     const wheels: RaycastVehicleWheel[] = [
-        {
-            object: topLeftWheelObject,
-            options: {
-                ...commonWheelOptions,
-                chassisConnectionPointLocal: new Vector3(vehicleBack, vehicleHeight, vehicleWidth * 0.5),
-            },
+      {
+        object: topLeftWheelObject,
+        options: {
+          ...commonWheelOptions,
+          chassisConnectionPointLocal: new Vector3(
+            vehicleBack,
+            vehicleHeight,
+            vehicleWidth * 0.5,
+          ),
         },
-        {
-            object: topRightWheelObject,
-            options: {
-                ...commonWheelOptions,
-                chassisConnectionPointLocal: new Vector3(vehicleBack, vehicleHeight, vehicleWidth * -0.5),
-            },
+      },
+      {
+        object: topRightWheelObject,
+        options: {
+          ...commonWheelOptions,
+          chassisConnectionPointLocal: new Vector3(
+            vehicleBack,
+            vehicleHeight,
+            vehicleWidth * -0.5,
+          ),
         },
-        {
-            object: bottomLeftWheelObject,
-            options: {
-                ...commonWheelOptions,
-                chassisConnectionPointLocal: new Vector3(vehicleFront, vehicleHeight, vehicleWidth * 0.5),
-            },
+      },
+      {
+        object: bottomLeftWheelObject,
+        options: {
+          ...commonWheelOptions,
+          chassisConnectionPointLocal: new Vector3(
+            vehicleFront,
+            vehicleHeight,
+            vehicleWidth * 0.5,
+          ),
         },
-        {
-            object: bottomRightWheelObject,
-            options: {
-                ...commonWheelOptions,
-                chassisConnectionPointLocal: new Vector3(vehicleFront, vehicleHeight, vehicleWidth * -0.5),
-            },
+      },
+      {
+        object: bottomRightWheelObject,
+        options: {
+          ...commonWheelOptions,
+          chassisConnectionPointLocal: new Vector3(
+            vehicleFront,
+            vehicleHeight,
+            vehicleWidth * -0.5,
+          ),
         },
-    ]
+      },
+    ];
 
     useImperativeHandle(ref, () => ({
-        chassisRigidBody: chassisRigidBodyRef,
-        rapierRaycastVehicle: vehicleRef,
-        setBraking: (braking: boolean) => {
-            const material = brakeLightsRef.current.material as MeshStandardMaterial
-            material.color = braking ? BRAKE_LIGHTS_ON_COLOR : BRAKE_LIGHTS_OFF_COLOR
-        },
-        wheels,
-    }))
+      chassisRigidBody: chassisRigidBodyRef,
+      rapierRaycastVehicle: vehicleRef,
+
+      wheels,
+    }));
 
     useEffect(() => {
-        vehicleRef.current = new RapierRaycastVehicle({
-            world: rapier.world,
-            chassisRigidBody: chassisRigidBodyRef.current,
-            indexRightAxis,
-            indexForwardAxis,
-            indexUpAxis,
-        })
-
-        for (let i = 0; i < wheels.length; i++) {
-            const options = wheels[i].options
-            vehicleRef.current.addWheel(options)
-        }
-
-        vehicleRef.current = vehicleRef.current
-    }, [
-        chassisRigidBodyRef,
-        vehicleRef,
+      vehicleRef.current = new RapierRaycastVehicle({
+        world: rapier.world,
+        chassisRigidBody: chassisRigidBodyRef.current,
         indexRightAxis,
         indexForwardAxis,
         indexUpAxis,
-        directionLocal,
-        axleLocal,
-        levaWheelOptions,
-    ])
+      });
+
+      for (let i = 0; i < wheels.length; i++) {
+        const options = wheels[i].options;
+        vehicleRef.current.addWheel(options);
+      }
+
+      vehicleRef.current = vehicleRef.current;
+    }, [
+      chassisRigidBodyRef,
+      vehicleRef,
+      indexRightAxis,
+      indexForwardAxis,
+      indexUpAxis,
+      directionLocal,
+      axleLocal,
+      levaWheelOptions,
+    ]);
 
     const [leftHeadlightTarget] = useState(() => {
-        const object = new Object3D()
-        object.position.set(10, -0.5, -0.7)
-        return object
-    })
+      const object = new Object3D();
+      object.position.set(10, -10, -0.7);
+      return object;
+    });
 
     const [rightHeadlightTarget] = useState(() => {
-        const object = new Object3D()
-        object.position.set(10, -0.5, 0.7)
-        return object
-    })
+      const object = new Object3D();
+      object.position.set(10, -10, 0.7);
+      return object;
+    });
+
+    let afk = false;
+    let afkTimer = 0;
+    const afkThreshold = 4;
+    const [, get] = useKeyboardControls();
+    const cameraSpeedFactor = 0.02;
+    let currentPoint = data.length - 1;
+    useFrame((state, delta) => {
+      if (!cameraPositionRef.current || !cameraTargetRef.current || !chassisMeshRef.current) return;
+      const deltaAdjusted = delta * 60;
+      afkTimer += delta;
+      const { forward, back, left, right, brake } = get();
+      if (forward || back || left || right || brake) {
+        afk = false;
+        afkTimer = 0;
+      }
+
+      if (afkTimer > afkThreshold) {
+        afk = true;
+        if(state.camera.position.y >= 6){
+          const positionTarget = chassisMeshRef.current
+            .getWorldPosition(new Vector3())
+            .add(data[currentPoint]);
+          state.camera.position.copy(positionTarget);
+        }
+      }
+
+      if (!afk) {
+        state.camera.position.lerp(
+          cameraPositionRef.current.getWorldPosition(new Vector3()),
+          0.12 * deltaAdjusted,
+        );
+        state.camera.lookAt(
+          cameraTargetRef.current.getWorldPosition(new Vector3()),
+        );
+      }
+
+      if (afk) {
+        state.camera.lookAt(
+          chassisMeshRef.current.getWorldPosition(new Vector3()),
+        );
+        
+        if (currentPoint > 0) {
+          const previousPoint = chassisMeshRef.current
+            .getWorldPosition(new Vector3())
+            .add(data[currentPoint + 1] || data[currentPoint]);
+          const positionTarget = chassisMeshRef.current
+            .getWorldPosition(new Vector3())
+            .add(data[currentPoint]);
+
+          const distanceToPrev = previousPoint.distanceTo(positionTarget);
+
+
+          const discontinuityThreshold = 1.0; // Adjust as needed
+
+          if (distanceToPrev > discontinuityThreshold) {
+            state.camera.position.copy(positionTarget);
+          } else {
+            state.camera.position.lerp(
+              positionTarget,
+              cameraSpeedFactor * deltaAdjusted,
+            );
+          }
+
+          if (state.camera.position.distanceTo(positionTarget) < 0.5) {
+            currentPoint -= 1;
+          }
+
+          // console.log(positionTarget);
+        } else {
+          currentPoint = data.length - 1;
+          state.camera.position.copy(
+            chassisMeshRef.current
+              .getWorldPosition(new Vector3())
+              .add(data[currentPoint]),
+          );
+        }
+      }
+
+      const bodyPosition = chassisRigidBodyRef.current.translation();
+
+      if (bodyPosition.y < -10) {
+        chassisRigidBodyRef.current.setTranslation(
+          new Vector3(...spawn.position),
+          true,
+        );
+        const spawnRot = new Euler(...spawn.rotation);
+        const spawnQuat = new Quaternion().setFromEuler(spawnRot);
+        chassisRigidBodyRef.current.setRotation(spawnQuat, true);
+        chassisRigidBodyRef.current.setLinvel(new Vector3(0, 0, 0), true);
+        chassisRigidBodyRef.current.setAngvel(new Vector3(0, 0, 0), true);
+      }
+    });
 
     return (
-        <>
-            <RigidBody {...groupProps} colliders={false} ref={chassisRigidBodyRef} mass={150}>
-                {/* Collider */}
-                {/* todo: change to convex hull */}
-                <CuboidCollider args={[2.35, 0.55, 1]} />
+      <>
+        <RigidBody
+          {...groupProps}
+          colliders={false}
+          ref={chassisRigidBodyRef}
+          mass={150}
+        >
+          <group ref={cameraPositionRef} {...cameraPositionControls}>
+            {/* <boxGeometry args={[1, 1, 1]} /> */}
+          </group>
 
-                {/* Headlights */}
-                {[
-                    {
-                        position: [2.4, -0.2, -0.7] as Vector3Tuple,
-                        target: leftHeadlightTarget,
-                    },
-                    {
-                        position: [2.4, -0.2, 0.7] as Vector3Tuple,
-                        target: rightHeadlightTarget,
-                    },
-                ].map(({ position, target }, idx) => (
-                    <Fragment key={idx}>
-                        <primitive object={target} />
-                        <spotLight
-                            position={position}
-                            target={target}
-                            angle={0.8}
-                            decay={1}
-                            distance={20}
-                            castShadow
-                            penumbra={1}
-                            intensity={20}
-                        >
-                            {headlightsSpotLightHelper && <Helper type={SpotLightHelper} />}
-                        </spotLight>
-                    </Fragment>
-                ))}
+          <group ref={cameraTargetRef} {...cameraLookAtControls}>
+            {/* <boxGeometry args={[1, 1, 1]} /> */}
+          </group>
+          {/* Collider */}
+          {/* todo: change to convex hull */}
+          <CuboidCollider args={[2, 0.4, 0.7]} />
+          <M3 />
+          <mesh ref={chassisMeshRef}></mesh>
 
-                {/* Chassis */}
-                <group position={[-0.2, -0.25, 0]} rotation-y={Math.PI / 2} dispose={null}>
-                    <group>
-                        <mesh
-                            castShadow
-                            receiveShadow
-                            geometry={n.Chassis_1.geometry}
-                            material={m.BodyPaint}
-                            material-color="#f0c050"
-                        />
-                        <mesh
-                            castShadow
-                            geometry={n.Chassis_2.geometry}
-                            material={n.Chassis_2.material}
-                            material-color="#353535"
-                        />
-                        <mesh castShadow geometry={n.Glass.geometry} material={m.Glass} material-transparent />
-                        <mesh
-                            ref={brakeLightsRef}
-                            geometry={n.BrakeLights.geometry}
-                            material={m.BrakeLight}
-                            material-transparent
-                            material-toneMapped={true}
-                        />
-                        <mesh geometry={n.HeadLights.geometry} material={m.HeadLight} />
-                        <mesh geometry={n.Cabin_Grilles.geometry} material={m.Black} />
-                        <mesh geometry={n.Undercarriage.geometry} material={m.Undercarriage} />
-                        <mesh geometry={n.TurnSignals.geometry} material={m.TurnSignal} />
-                        <mesh geometry={n.Chrome.geometry} material={n.Chrome.material} />
-                        <group position={[0.37, 0.25, 0.46]}>
-                            <mesh geometry={n.Wheel_1.geometry} material={n.Wheel_1.material} />
-                            <mesh geometry={n.Wheel_2.geometry} material={n.Wheel_2.material} />
-                        </group>
-                        <group position={[0, 0, 0]}>
-                            <mesh geometry={n.License_1.geometry} material={m.License} />
-                            <mesh geometry={n.License_2.geometry} material={n.License_2.material} />
-                        </group>
-                        <group position={[0.2245, 0.3045, 0.6806]} scale={[0.0594, 0.0594, 0.0594]}>
-                            <mesh geometry={n.Cube013.geometry} material={n.Cube013.material} />
-                            <mesh geometry={n.Cube013_1.geometry} material={n.Cube013_1.material} />
-                            <mesh geometry={n.Cube013_2.geometry} material={n.Cube013_2.material} />
-                        </group>
-                        <mesh
-                            geometry={n['pointer-left'].geometry}
-                            material={n['pointer-left'].material}
-                            position={[0.5107, 0.3045, 0.6536]}
-                            rotation={[Math.PI / 2, -1.1954, 0]}
-                            scale={[0.0209, 0.0209, 0.0209]}
-                        />
-                        <mesh
-                            geometry={n['pointer-right'].geometry}
-                            material={n['pointer-right'].material}
-                            position={[0.2245, 0.3045, 0.6536]}
-                            rotation={[-Math.PI / 2, -0.9187, Math.PI]}
-                            scale={[0.0209, 0.0209, 0.0209]}
-                        />
-                    </group>
-                    {children}
-                </group>
-            </RigidBody>
+          {/* Headlights */}
+          {[
+            {
+              position: [4, 1.2, -0.7] as Vector3Tuple,
+              target: leftHeadlightTarget,
+            },
+            {
+              position: [4, 1.2, 0.7] as Vector3Tuple,
+              target: rightHeadlightTarget,
+            },
+          ].map(({ position, target }, idx) => (
+            <Fragment key={idx}>
+              <primitive object={target} />
+              <spotLight
+                position={position}
+                target={target}
+                angle={1.3}
+                decay={0.1}
+                castShadow={idx === 0}
+                penumbra={0.8}
+                intensity={100}
+                color={0xffc562}
+                shadow-mapSize-height={4096}
+                shadow-mapSize-width={4096}
+                shadow-bias={-0.001}
+              >
+                {headlightsSpotLightHelper && <Helper type={SpotLightHelper} />}
+              </spotLight>
+            </Fragment>
+          ))}
 
-            {/* Wheels */}
-            <group ref={topLeftWheelObject}>
-                <Wheel rotation={[0, Math.PI / 2, 0]} side="left" radius={commonWheelOptions.radius} />
-            </group>
-            <group ref={topRightWheelObject}>
-                <Wheel rotation={[0, Math.PI / 2, 0]} side="right" radius={commonWheelOptions.radius} />
-            </group>
-            <group ref={bottomLeftWheelObject}>
-                <Wheel rotation={[0, Math.PI / 2, 0]} side="left" radius={commonWheelOptions.radius} />
-            </group>
-            <group ref={bottomRightWheelObject}>
-                <Wheel rotation={[0, Math.PI / 2, 0]} side="right" radius={commonWheelOptions.radius} />
-            </group>
-        </>
-    )
-})
+          {/* Chassis */}
+        </RigidBody>
+
+        {/* Wheels */}
+        <group ref={topLeftWheelObject}>
+          <Wheel
+            rotation={[0, Math.PI / 2, 0]}
+            side="left"
+            radius={commonWheelOptions.radius}
+          />
+        </group>
+        <group ref={topRightWheelObject}>
+          <Wheel
+            rotation={[0, Math.PI / 2, 0]}
+            side="right"
+            radius={commonWheelOptions.radius}
+          />
+        </group>
+        <group ref={bottomLeftWheelObject}>
+          <Wheel
+            rotation={[0, Math.PI / 2, 0]}
+            side="left"
+            radius={commonWheelOptions.radius}
+          />
+        </group>
+        <group ref={bottomRightWheelObject}>
+          <Wheel
+            rotation={[0, Math.PI / 2, 0]}
+            side="right"
+            radius={commonWheelOptions.radius}
+          />
+        </group>
+      </>
+    );
+  },
+);
