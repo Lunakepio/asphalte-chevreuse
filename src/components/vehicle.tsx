@@ -38,6 +38,7 @@ import { WheelMesh } from "./wheel-mesh";
 import { spawn } from "../constants";
 import { data } from "../curve";
 import { Smoke } from "./particles/smoke";
+import { Skid } from "./particles/skid";
 
 type WheelProps = ThreeElements["group"] & {
   side: "left" | "right";
@@ -104,7 +105,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const cameraPositionControls = useLeva(
       "Camera Position",
       {
-        position: { value: [-17, 14, 0], step: 0.1 },
+        position: { value: [-13, 18, 0], step: 0.1 },
         fov: { value: 44, min: 1, max: 180, step: 1 },
       },
       {
@@ -147,7 +148,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
         // Suspension settings: stiffer springs, reduced travel for less body roll
         suspensionStiffness: 15, // increased stiffness for better grip and responsiveness
-        suspensionRestLength: 0.35, // shorter rest length for a firmer feel
+        suspensionRestLength: 0.4, // shorter rest length for a firmer feel
         maxSuspensionForce: 60000, // higher force to maintain control under load
         maxSuspensionTravel: 0.7, // reduced travel to limit excessive body movement
 
@@ -166,7 +167,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
         // Acceleration settings: sharper throttle response for performance
         forwardAcceleration: 2, // increased engine force for rapid acceleration
-        sideAcceleration: 2.5, // slightly lower to help keep the car stable in turns
+        sideAcceleration: 2.7, // slightly lower to help keep the car stable in turns
 
         vehicleWidth: 1.33,
         vehicleHeight: 0.05,
@@ -291,6 +292,8 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const [, get] = useKeyboardControls();
     const cameraSpeedFactor = 0.007;
     let currentPoint = data.length - 1;
+    let turningTime = 0;
+    const turningThreshold = 0.5;
     useFrame((state, delta) => {
       if (
         !cameraPositionRef.current ||
@@ -306,15 +309,18 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         afkTimer = 0;
       }
 
-      if (afkTimer > afkThreshold) {
-        // afk = true;
-        // if (state.camera.position.y >= 6) {
-        //   const positionTarget = chassisMeshRef.current
-        //     .getWorldPosition(new Vector3())
-        //     .add(data[currentPoint]);
-        //   state.camera.position.copy(positionTarget);
-        // }
-      }
+      // if (
+      //   afkTimer > afkThreshold &&
+      //   Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) < 1
+      // ) {
+      //   afk = true;
+      //   if (state.camera.position.y >= 6) {
+      //     const positionTarget = chassisMeshRef.current
+      //       .getWorldPosition(new Vector3())
+      //       .add(data[currentPoint]);
+      //     state.camera.position.copy(positionTarget);
+      //   }
+      // }
 
       if (!afk) {
         state.camera.position.lerp(
@@ -332,7 +338,6 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         );
 
         if (currentPoint > 0) {
-
           const positionTarget = chassisMeshRef.current
             .getWorldPosition(new Vector3())
             .add(data[currentPoint]);
@@ -374,6 +379,16 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       //   true
       // );
 
+      if(left || right){turningTime+=delta;} else {turningTime=0;}
+      
+    
+
+      const isSpinning =
+        (Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) > 90 &&
+          turningTime > turningThreshold) ||
+        brake;
+
+      bottomLeftWheelObject.current.isSpinning = isSpinning;
 
       if (bodyPosition.y < -10) {
         chassisRigidBodyRef.current.setTranslation(
@@ -407,10 +422,9 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           {/* todo: change to convex hull */}
           <CuboidCollider args={[2, 0.4, 0.7]} />
           <M3 />
-          
+
           <mesh ref={chassisMeshRef}></mesh>
-          <mesh ref={exhaustRef} position={[-2.5, -0.15, -0.45]}>
-          </mesh>
+          <mesh ref={exhaustRef} position={[-2.3, -0.15, -0.45]}></mesh>
 
           {/* Headlights */}
           {[
@@ -445,7 +459,11 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
           {/* Chassis */}
         </RigidBody>
-        <Smoke exhaustRef={exhaustRef}/>
+        <Smoke exhaustRef={exhaustRef} vehicleRef={vehicleRef} />
+        <Skid
+          bottomLeftWheelObject={bottomLeftWheelObject}
+          bottomRightWheelObject={bottomRightWheelObject}
+        />
         {/* Wheels */}
         <group ref={topLeftWheelObject}>
           <Wheel

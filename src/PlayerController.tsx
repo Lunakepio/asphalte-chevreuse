@@ -75,9 +75,8 @@ export const PlayerController = () => {
       // engineForce -= maxForce;
     }
 
-    currentSteering.current = MathUtils.lerp(currentSteering.current, left ? maxSteer : right ? -maxSteer : 0, 0.015 * deltaAdjusted);
+    currentSteering.current = MathUtils.lerp(currentSteering.current, left ? maxSteer : right ? -maxSteer : 0, 0.01 * deltaAdjusted);
 
-    // console.log(vehicle, currentSteering.current);
 
     const brakeForce = brake ? maxBrake : !forward ? 0.015 : 0;
 

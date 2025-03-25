@@ -1,7 +1,7 @@
 import { Canvas, useLoader } from "@react-three/fiber";
 import { Physics, CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Environment, KeyboardControls } from "@react-three/drei";
-import { useControls as useLeva } from "leva";
+import { Leva, useControls as useLeva } from "leva";
 import { Suspense } from "react";
 import { PlayerController } from "./PlayerController";
 import { Lighting } from "./Lighting";
@@ -61,6 +61,13 @@ export const Sketch = () => {
           <Environment preset="night" environmentIntensity={0.5}/>
           {/* <Perf/> */}
         </Suspense>
+        <Leva  fill // default = false,  true makes the pane fill the parent dom node it's rendered in
+        flat // default = false,  true removes border radius and shadow
+        oneLineLabels // default = false, alternative layout for labels, with labels and fields on separate rows
+        hideTitleBar // default = false, hides the GUI header
+        collapsed // default = false, when true the GUI is collpased
+        hidden // def
+        />
       </Canvas>
     </>
   );
