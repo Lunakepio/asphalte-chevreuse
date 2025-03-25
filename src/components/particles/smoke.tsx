@@ -1,7 +1,7 @@
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { extend, ThreeEvent, useFrame } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { BoxGeometry,  MeshLambertMaterial, OctahedronGeometry, Vector3 } from 'three';
+import { BoxGeometry,  MathUtils,  MeshLambertMaterial, OctahedronGeometry, Vector3 } from 'three';
 
 // add InstancedMesh2 to the jsx catalog i.e use it as a jsx component
 extend({ InstancedMesh2 });
@@ -12,7 +12,7 @@ export const Smoke = ({ exhaustRef }) => {
   const lifeTime = 1;
   const scaleMultiplier = 3;
   const speed = 3;
-  const direction = new Vector3(0, 0.2, 1).normalize();
+  const direction = new Vector3(0, 0.5, 0).normalize();
   const displacement = 0.1;
 
   const geometry = useMemo(() => new OctahedronGeometry(0.03, 1), []);
@@ -31,13 +31,21 @@ export const Smoke = ({ exhaustRef }) => {
         .setY(position.y)
         .setZ(position.z);
       obj.quaternion.random();
+      obj.currentTime = 0;
 
     });
-    // ref.current.updateInstances((obj) => {
-    //   // obj.position.addScaledVector(direction, speed * delta)
-    //   // obj.scale.addScalar(scaleMultiplier * delta);
-    //   // obj.opacity -= delta * 1;
-    // })
+    ref.current.updateInstances((obj) => {
+      obj.currentTime += delta;
+      obj.position.addScaledVector(direction, speed * delta)
+      obj.scale.addScalar(scaleMultiplier * delta);
+      obj.opacity = Math.max(0, obj.opacity - delta * 1);
+      
+      if (obj.currentTime >= lifeTime) {
+        obj.remove();
+        return;
+      }
+
+    })
   });
 
   useEffect(() => {
@@ -52,7 +60,7 @@ export const Smoke = ({ exhaustRef }) => {
   return (
     <instancedMesh2
       ref={ref}
-      args={[geometry, material]}
+      args={[geometry, material, {createEntities: true}]}
       frustumCulled={false}
     />
   );
