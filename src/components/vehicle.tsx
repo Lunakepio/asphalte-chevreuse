@@ -309,18 +309,18 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         afkTimer = 0;
       }
 
-      // if (
-      //   afkTimer > afkThreshold &&
-      //   Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) < 1
-      // ) {
-      //   afk = true;
-      //   if (state.camera.position.y >= 6) {
-      //     const positionTarget = chassisMeshRef.current
-      //       .getWorldPosition(new Vector3())
-      //       .add(data[currentPoint]);
-      //     state.camera.position.copy(positionTarget);
-      //   }
-      // }
+      if (
+        afkTimer > afkThreshold &&
+        Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) < 1
+      ) {
+        afk = true;
+        if (state.camera.position.y >= 6) {
+          const positionTarget = chassisMeshRef.current
+            .getWorldPosition(new Vector3())
+            .add(data[currentPoint]);
+          state.camera.position.copy(positionTarget);
+        }
+      }
 
       if (!afk) {
         state.camera.position.lerp(
