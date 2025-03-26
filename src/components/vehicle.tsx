@@ -293,7 +293,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const cameraSpeedFactor = 0.007;
     let currentPoint = data.length - 1;
     let turningTime = 0;
-    const turningThreshold = 0.5;
+    const turningThreshold = 0.3;
     useFrame((state, delta) => {
       if (
         !cameraPositionRef.current ||

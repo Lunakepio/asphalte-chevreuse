@@ -42,7 +42,7 @@ export const Sketch = () => {
               <PlayerController />
             </KeyboardControls>
             {/* ground */}
-            <RigidBody
+            {/* <RigidBody
               type="fixed"
               position={[spawn.position[0], spawn.position[1] - 10, spawn.position[2]]}
               colliders={false}
@@ -53,8 +53,8 @@ export const Sketch = () => {
                 <boxGeometry args={[240, 10, 240]} />
                 <meshStandardMaterial color="#AA3030" map={texture}/>
               </mesh>
-            </RigidBody>
-            {/* <Chevreuse/> */}
+            </RigidBody> */}
+            <Chevreuse/>
           </Physics>
           <Lighting />
           <Composer/>
