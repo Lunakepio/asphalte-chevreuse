@@ -31,14 +31,14 @@ import {
 import {
   RapierRaycastVehicle,
   WheelOptions,
-} from "../lib/rapier-raycast-vehicle";
+} from "../../../lib/rapier-raycast-vehicle";
 import { M3 } from "./M3";
 import { ThreeElements, useFrame } from "@react-three/fiber";
 import { WheelMesh } from "./wheel-mesh";
-import { spawn } from "../constants";
-import { data } from "../curve";
-import { Smoke } from "./particles/smoke";
-import { Skid } from "./particles/skid";
+import { spawn } from "../../../constants";
+import { data } from "../../../curves/curve";
+import { Smoke } from "../particles/smoke";
+import { Skid } from "../particles/skid";
 
 type WheelProps = ThreeElements["group"] & {
   side: "left" | "right";
@@ -290,7 +290,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     let afkTimer = 0;
     const afkThreshold = 4;
     const [, get] = useKeyboardControls();
-    const cameraSpeedFactor = 0.007;
+    const cameraSpeedFactor = 0.01;
     let currentPoint = data.length - 1;
     let turningTime = 0;
     const turningThreshold = 0.3;

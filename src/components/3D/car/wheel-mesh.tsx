@@ -25,7 +25,7 @@ type GLTFResult = GLTF & {
 }
 
 export const WheelMesh = (props: JSX.IntrinsicElements['group']) => {
-  const { nodes, materials } = useGLTF('/wheel.glb') as GLTFResult
+  const { nodes, materials } = useGLTF('/models/cars/wheel.glb') as GLTFResult
   materials['Material.009'].emissive.r = materials['Material.009'].color.r;
   materials['Material.009'].emissive.g = materials['Material.009'].color.g;
   materials['Material.009'].emissive.b = materials['Material.009'].color.b;
@@ -46,4 +46,4 @@ export const WheelMesh = (props: JSX.IntrinsicElements['group']) => {
   )
 }
 
-useGLTF.preload('/wheel.glb')
+useGLTF.preload('/models/cars/wheel.glb')

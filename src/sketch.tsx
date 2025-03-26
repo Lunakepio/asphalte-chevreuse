@@ -2,15 +2,16 @@ import { Canvas, useLoader } from "@react-three/fiber";
 import { Physics, CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Environment, KeyboardControls } from "@react-three/drei";
 import { Leva, useControls as useLeva } from "leva";
-import { Suspense } from "react";
+import { Suspense, useEffect, useLayoutEffect, useRef } from "react";
 import { PlayerController } from "./PlayerController";
-import { Lighting } from "./Lighting";
+import { Lighting } from "./components/3D/misc/lighting";
 import { TextureLoader } from "three";
 
-import { Chevreuse } from "./components/Chevreuse";
+import { Chevreuse } from "./components/3D/track/Chevreuse";
 
-import { Composer } from "./components/postprocessing/composer";
+import { Composer } from "./components/3D/postprocessing/composer";
 import { spawn } from "./constants";
+import { useGameStore } from "./store/store";
 
 export const Sketch = () => {
   const { debug } = useLeva("physics", {
@@ -30,6 +31,19 @@ export const Sketch = () => {
   ];
 
   const texture = useLoader(TextureLoader, "/grid.jpg");
+  
+  const gameStateRef = useRef(null);
+  const setGameState = useGameStore(state => state.setGameState);
+  
+
+  useLayoutEffect(() => {
+    setTimeout(() => {
+      if (gameStateRef.current) {
+        setGameState(gameStateRef.current);
+        console.log("Game state ref updated:", gameStateRef.current);
+      }
+    }, 100);
+  }, []);
   
   return (
     <>
@@ -57,10 +71,12 @@ export const Sketch = () => {
             <Chevreuse/>
           </Physics>
           <Lighting />
-          <Composer/>
-          <Environment preset="night" environmentIntensity={0.5}/>
+          {/* <Composer/> */}
+          <Environment preset="warehouse" environmentIntensity={1}/>
           {/* <Perf/> */}
         </Suspense>
+        <group ref={gameStateRef}></group>
+
         <Leva  fill // default = false,  true makes the pane fill the parent dom node it's rendered in
         flat // default = false,  true removes border radius and shadow
         oneLineLabels // default = false, alternative layout for labels, with labels and fields on separate rows

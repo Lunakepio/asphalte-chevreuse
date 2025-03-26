@@ -1,13 +1,12 @@
 import { OrbitControls, useKeyboardControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import {
-  useBeforePhysicsStep,
-} from "@react-three/rapier";
+import { useBeforePhysicsStep } from "@react-three/rapier";
 import { useControls as useLeva } from "leva";
 import { useRef } from "react";
 import { MathUtils, Quaternion, Vector3 } from "three";
-import { Vehicle, VehicleRef } from "./components/vehicle";
+import { Vehicle, VehicleRef } from "./components/3D/car/vehicle";
 import { AFTER_RAPIER_UPDATE } from "./constants";
+import { useGameStore } from "./store/store";
 
 const chassisTranslation = new Vector3();
 const chassisRotation = new Quaternion();
@@ -16,23 +15,34 @@ export const PlayerController = () => {
   const raycastVehicle = useRef<VehicleRef>(null);
 
   const [, get] = useKeyboardControls();
+  const gameState = useGameStore((state) => state.gameState);
 
-  const { cameraMode } = useLeva("camera", {
-    cameraMode: {
-      value: "drive",
-      options: ["drive", "orbit"],
+  const maxSpeed = 220;
+
+  const { cameraMode } = useLeva(
+    "camera",
+    {
+      cameraMode: {
+        value: "drive",
+        options: ["drive", "orbit"],
+      },
     },
-  }, {
-    collapsed: true,
-  });
+    {
+      collapsed: true,
+    },
+  );
 
-  const { maxForce, maxSteer, maxBrake } = useLeva("controls", {
-    maxForce: 12.5,
-    maxSteer: { value: Math.PI / 12, min: 0, max: Math.PI / 6 },
-    maxBrake: 0.15,
-  }, {
-    collapsed: true,
-  });
+  const { maxForce, maxSteer, maxBrake } = useLeva(
+    "controls",
+    {
+      maxForce: 12.5,
+      maxSteer: { value: Math.PI / 12, min: 0, max: Math.PI / 6 },
+      maxBrake: 0.15,
+    },
+    {
+      collapsed: true,
+    },
+  );
 
   const currentSteering = useRef(0);
   const lastTimeRef = useRef<number | null>(null);
@@ -52,7 +62,7 @@ export const PlayerController = () => {
       deltaTime = currentTime - lastTimeRef.current;
     }
     lastTimeRef.current = currentTime;
-    
+
     const deltaAdjusted = deltaTime * 60;
 
     const { forward, back, left, right, brake, handbrake } = get();
@@ -65,18 +75,22 @@ export const PlayerController = () => {
     // update wheels from controls
     let engineForce = 0;
 
-    if (forward) {
-      engineForce += maxForce;
+    if (forward && vehicle.state.currentVehicleSpeedKmHour < 220) {
+      const speedFactor = 1 - Math.pow(vehicle.state.currentVehicleSpeedKmHour / maxSpeed, 2);
+      engineForce += maxForce * speedFactor;
     }
     if (back) {
       engineForce -= maxForce;
     }
-    if(brake){
-      // engineForce -= maxForce;
+    if (brake) {
+      engineForce -= maxForce;
     }
 
-    currentSteering.current = MathUtils.lerp(currentSteering.current, left ? maxSteer : right ? -maxSteer : 0, 0.01 * deltaAdjusted);
-
+    currentSteering.current = MathUtils.lerp(
+      currentSteering.current,
+      left ? maxSteer : right ? -maxSteer : 0,
+      0.01 * deltaAdjusted,
+    );
 
     const brakeForce = brake ? maxBrake : !forward ? 0.015 : 0;
 
@@ -85,11 +99,10 @@ export const PlayerController = () => {
     vehicle.setBrakeValue(brakeForce * 0.2, 2);
     vehicle.setBrakeValue(brakeForce * 0.2, 3);
 
-    if(handbrake){
+    if (handbrake) {
       vehicle.setBrakeValue(brakeForce * 10, 2);
       vehicle.setBrakeValue(brakeForce * 10, 3);
     }
-
 
     // console.log(vehicle.state.currentVehicleSpeedKmHour);
 
@@ -110,7 +123,11 @@ export const PlayerController = () => {
       wheelObject.quaternion.copy(wheelState.worldTransform.quaternion);
     }
 
-
+    if (gameState) {
+      gameState.speed = Math.floor(
+        Math.abs(vehicle.state.currentVehicleSpeedKmHour),
+      );
+    }
   });
 
   useFrame(() => {
@@ -121,8 +138,6 @@ export const PlayerController = () => {
 
     chassisRotation.copy(chassis.current.rotation() as Quaternion);
     chassisTranslation.copy(chassis.current.translation() as Vector3);
-
-
   }, AFTER_RAPIER_UPDATE);
 
   return (

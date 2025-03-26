@@ -2,13 +2,55 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Orbitron', sans-serif;
+  font-smooth: always;
 }
 
+body{
+    background: #005249;    
+}
 .canvas-container{
   width: 100vw;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+
+}
+
+.ui{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .speedometer {
+      color: white;
+      position:fixed;
+      bottom:5%;
+      right: 10%;
+      width: 4ch;
+      font-size: 36px;
+      font-variant-numeric: tabular-nums;
+      display:flex;
+      span{
+          width: 6ch;
+          font-size: 36px;
+          font-variant-numeric: tabular-nums;
+          
+      }
+      .unit{
+          width: 6ch;
+          font-size:16px;
+          font-style: italic;
+          font-weight: 600;
+          opacity:0.4;
+          color: background: #baf7e8;
+          margin-top:1ch;
+      }
+  }
 }
 

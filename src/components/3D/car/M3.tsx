@@ -70,7 +70,7 @@ type GLTFResult = GLTF & {
 };
 
 export function M3(props: JSX.IntrinsicElements["group"]) {
-  const { nodes, materials } = useGLTF("/M3.glb") as GLTFResult;
+  const { nodes, materials } = useGLTF("/models/cars/M3.glb") as GLTFResult;
   const [, get] = useKeyboardControls();
 
   const leftLightRef = useRef(null);
@@ -362,4 +362,4 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
   );
 }
 
-useGLTF.preload("/M3.glb");
+useGLTF.preload("/models/cars/M3.glb");

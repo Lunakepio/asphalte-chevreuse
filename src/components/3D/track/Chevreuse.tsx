@@ -8,7 +8,7 @@ import { RigidBody } from '@react-three/rapier'
 import { useControls } from 'leva'
 
 export function Chevreuse(props) {
-  const { nodes, materials } = useGLTF('/chevreuse.glb')
+  const { nodes, materials } = useGLTF('/models/tracks/chevreuse.glb')
   
   const groundControls = useControls('ground', {
     color : "#0c1621",
@@ -4069,4 +4069,4 @@ export function Chevreuse(props) {
   )
 }
 
-useGLTF.preload('/chevreuse.glb')
+useGLTF.preload('/models/tracks/chevreuse.glb')
