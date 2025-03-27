@@ -167,7 +167,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
         // Acceleration settings: sharper throttle response for performance
         forwardAcceleration: 2, // increased engine force for rapid acceleration
-        sideAcceleration: 2.7, // slightly lower to help keep the car stable in turns
+        sideAcceleration: 2.2, // slightly lower to help keep the car stable in turns
 
         vehicleWidth: 1.33,
         vehicleHeight: 0.05,

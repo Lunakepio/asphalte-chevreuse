@@ -18,7 +18,7 @@ body{
 
 }
 
-.ui{
+.ui {
   position: absolute;
   top: 0;
   left: 0;
@@ -27,30 +27,72 @@ body{
   display: flex;
   justify-content: center;
   align-items: center;
-  .speedometer {
-      color: white;
-      position:fixed;
-      bottom:5%;
-      right: 10%;
-      width: 4ch;
-      font-size: 36px;
-      font-variant-numeric: tabular-nums;
-      display:flex;
-      span{
-          width: 6ch;
-          font-size: 36px;
-          font-variant-numeric: tabular-nums;
-          
-      }
-      .unit{
-          width: 6ch;
-          font-size:16px;
-          font-style: italic;
-          font-weight: 600;
-          opacity:0.4;
-          color: background: #baf7e8;
-          margin-top:1ch;
-      }
-  }
 }
 
+.gearometer {
+    color: white;
+    position: fixed;
+    bottom: 8%;
+    right: 19%;
+    font-size:24px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    width: 2ch;
+}
+
+.speedometer {
+  color: white;
+  position: fixed;
+  bottom: 5%;
+  right: 10%;
+  font-size: 36px;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+
+.speedometer .speed {
+  display: flex;
+  width: 5ch;
+  justify-content: center;
+}
+
+.speed-digits {
+    display: flex;
+    width: 5ch;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.digit{
+    display:block;
+    font-variant-numeric: tabular-nums;
+    width: 1ch;
+}
+
+.speedometer .digit {
+  display: inline-block;
+  width: 1ch;
+  text-align: center;
+  font-size: 1.5ch;
+}
+
+.zero {
+    color: #baf7e8;
+    opacity: 0.4;
+}
+
+.unit {
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 600;
+  opacity: 0.4;
+  color: #baf7e8;
+  white-space: nowrap;
+  position: absolute;
+  bottom: 58px;
+}

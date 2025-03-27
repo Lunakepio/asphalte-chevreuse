@@ -5,7 +5,7 @@ import { useControls as useLeva } from "leva";
 import { useRef } from "react";
 import { MathUtils, Quaternion, Vector3 } from "three";
 import { Vehicle, VehicleRef } from "./components/3D/car/vehicle";
-import { AFTER_RAPIER_UPDATE } from "./constants";
+import { AFTER_RAPIER_UPDATE, maxRPM, minRPM, gears } from "./constants";
 import { useGameStore } from "./store/store";
 
 const chassisTranslation = new Vector3();
@@ -17,7 +17,6 @@ export const PlayerController = () => {
   const [, get] = useKeyboardControls();
   const gameState = useGameStore((state) => state.gameState);
 
-  const maxSpeed = 220;
 
   const { cameraMode } = useLeva(
     "camera",
@@ -37,7 +36,7 @@ export const PlayerController = () => {
     {
       maxForce: 12.5,
       maxSteer: { value: Math.PI / 12, min: 0, max: Math.PI / 6 },
-      maxBrake: 0.15,
+      maxBrake: 0.5,
     },
     {
       collapsed: true,
@@ -46,6 +45,62 @@ export const PlayerController = () => {
 
   const currentSteering = useRef(0);
   const lastTimeRef = useRef<number | null>(null);
+
+  const currentGearRef = useRef(1);
+  const rpmRef = useRef(2000);
+
+  const lastGearChangeTime = useRef(performance.now());
+  const gearChangeCooldown = 1000;
+  const isClutchEngaged = useRef(false);
+  
+  const updateGearbox = (speed: number, isBraking: boolean) => {
+    const absSpeed = Math.max(0, Math.abs(speed));
+    const gear = gears[currentGearRef.current - 1];
+  
+    rpmRef.current = (absSpeed / gear.maxSpeed) * (maxRPM - minRPM) + minRPM;
+  
+    if (isBraking) {
+      rpmRef.current *= 0.85;
+    }
+  
+    rpmRef.current = Math.max(minRPM, rpmRef.current);
+  
+    const now = performance.now();
+  
+    if (isClutchEngaged.current && now - lastGearChangeTime.current > gearChangeCooldown) {
+      isClutchEngaged.current = false;
+    }
+  
+    if (rpmRef.current > maxRPM * 0.9 && currentGearRef.current < gears.length) {
+      if (now - lastGearChangeTime.current > gearChangeCooldown) { 
+        currentGearRef.current++;
+        lastGearChangeTime.current = now;
+        isClutchEngaged.current = true;
+      }
+    }
+  
+    if ((rpmRef.current < 2000 || speed < gears[currentGearRef.current - 1].maxSpeed * 0.6) 
+        && currentGearRef.current > 1) {
+      if (now - lastGearChangeTime.current > gearChangeCooldown) {
+        currentGearRef.current--;
+        lastGearChangeTime.current = now;
+        isClutchEngaged.current = true;
+
+      }
+    }
+  
+    if (isBraking && absSpeed < 10 && currentGearRef.current > 1) {
+      if (now - lastGearChangeTime.current > gearChangeCooldown) {
+        currentGearRef.current = Math.max(1, currentGearRef.current - 1);
+        lastGearChangeTime.current = now;
+        isClutchEngaged.current = true;
+      }
+    }
+  };
+
+
+
+
   useBeforePhysicsStep((world) => {
     if (
       !raycastVehicle.current ||
@@ -72,19 +127,25 @@ export const PlayerController = () => {
       rapierRaycastVehicle: { current: vehicle },
     } = raycastVehicle.current;
 
-    // update wheels from controls
-    let engineForce = 0;
+    const speedKmHour = Math.abs(vehicle.state.currentVehicleSpeedKmHour);
+    updateGearbox(speedKmHour, brake);
 
-    if (forward && vehicle.state.currentVehicleSpeedKmHour < 220) {
-      const speedFactor = 1 - Math.pow(vehicle.state.currentVehicleSpeedKmHour / maxSpeed, 2);
-      engineForce += maxForce * speedFactor;
-    }
-    if (back) {
-      engineForce -= maxForce;
-    }
-    if (brake) {
-      engineForce -= maxForce;
-    }
+    const gear = gears[currentGearRef.current - 1];
+
+    let engineForce = 0;
+    
+      if (forward) {
+        const speedFactor = 1 - Math.pow(speedKmHour / gear.maxSpeed, 2.5);
+        engineForce += maxForce * speedFactor * gear.ratio;
+      }
+      if (back) {
+        engineForce -= maxForce;
+      }
+    
+    console.log(isClutchEngaged.current);
+    vehicle.applyEngineForce(isClutchEngaged.current ? 0 : engineForce, 2);
+    vehicle.applyEngineForce(isClutchEngaged.current ? 0 : engineForce, 3);
+
 
     currentSteering.current = MathUtils.lerp(
       currentSteering.current,
@@ -92,7 +153,7 @@ export const PlayerController = () => {
       0.01 * deltaAdjusted,
     );
 
-    const brakeForce = brake ? maxBrake : !forward ? 0.015 : 0;
+    const brakeForce = brake ? maxBrake : !forward ? 0.05 : 0;
 
     vehicle.setBrakeValue(brakeForce * 0.6, 0);
     vehicle.setBrakeValue(brakeForce * 0.6, 1);
@@ -104,7 +165,6 @@ export const PlayerController = () => {
       vehicle.setBrakeValue(brakeForce * 10, 3);
     }
 
-    // console.log(vehicle.state.currentVehicleSpeedKmHour);
 
     vehicle.setSteeringValue(currentSteering.current, 0);
     vehicle.setSteeringValue(currentSteering.current, 1);
@@ -124,9 +184,9 @@ export const PlayerController = () => {
     }
 
     if (gameState) {
-      gameState.speed = Math.floor(
-        Math.abs(vehicle.state.currentVehicleSpeedKmHour),
-      );
+      gameState.speed = Math.floor(speedKmHour);
+      gameState.gear = currentGearRef.current;
+      gameState.rpm = rpmRef.current;
     }
   });
 
