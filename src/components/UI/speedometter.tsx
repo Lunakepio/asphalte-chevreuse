@@ -6,9 +6,10 @@ export const Speedometer = () => {
   const numSegments = 24; // Total segments in the arc
   const gameState = useGameStore((state) => state.gameState);
   const [speed, setSpeed] = useState("000");
-  const [rpm, setRPM] = useState(minRPM)
+  const [rpm, setRPM] = useState(minRPM);
+  const purpleThreshold = 14;
   const filledSegments = speed
-    ? Math.round((rpm / maxRPM) * numSegments)
+    ? Math.round((speed / 280) * numSegments)
     : 0;
 
   useEffect(() => {
@@ -26,9 +27,8 @@ export const Speedometer = () => {
     return () => clearInterval(interval);
   }, [gameState]);
 
-  // Function to interpolate color between Green, Blue, and Purple
   const getInterpolatedColor = (index: number) => {
-    const t = index / numSegments; // Normalized position (0 to 1)
+    const t = index / (numSegments - 6);
 
     let hue;
     if (t < 0.5) {
@@ -47,9 +47,9 @@ export const Speedometer = () => {
       {/* Circular Arc */}
       <svg style={styles.svg} viewBox="0 0 100 100">
         {Array.from({ length: numSegments }).map((_, i) => {
-          const angle = (i / numSegments) * 240 - 90;
+          const angle = (i / numSegments) * 240 - 130;
           const isFilled = i < filledSegments;
-          const color = isFilled ? getInterpolatedColor(i) : i > 18 ? "#ff54da50" : "#baf7e850";
+          const color = isFilled ? getInterpolatedColor(i) : i > purpleThreshold ? "#ff54da50" : "#baf7e850";
 
           return (
             <rect
@@ -59,7 +59,7 @@ export const Speedometer = () => {
               width="2"
               height="6"
               rx="1"
-              fill={i > 18 && isFilled ? "#ff54da" : color}
+              fill={i > purpleThreshold && isFilled ? "#ff54da" : color}
               transform={`rotate(${angle} 50 50)`}
             />
           );
@@ -89,12 +89,10 @@ const styles = {
   container: {
     width: "200px",
     height: "200px",
-    position: "fixed",
-    bottom: "5%",
-    right: "10%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    position: "relative",
   },
   svg: {
     position: "absolute",

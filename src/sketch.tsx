@@ -42,7 +42,7 @@ export const Sketch = () => {
         setGameState(gameStateRef.current);
         console.log("Game state ref updated:", gameStateRef.current);
       }
-    }, 100);
+    }, 300);
   }, []);
   
   return (
@@ -71,8 +71,8 @@ export const Sketch = () => {
             <Chevreuse/>
           </Physics>
           <Lighting />
-          {/* <Composer/> */}
-          <Environment preset="warehouse" environmentIntensity={1}/>
+          <Composer/>
+          <Environment preset="night" environmentIntensity={1}/>
           {/* <Perf/> */}
         </Suspense>
         <group ref={gameStateRef}></group>

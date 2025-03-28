@@ -36,7 +36,7 @@ export const PlayerController = () => {
     {
       maxForce: 12.5,
       maxSteer: { value: Math.PI / 12, min: 0, max: Math.PI / 6 },
-      maxBrake: 0.5,
+      maxBrake: 0.15,
     },
     {
       collapsed: true,

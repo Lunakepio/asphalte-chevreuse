@@ -39,6 +39,7 @@ import { spawn } from "../../../constants";
 import { data } from "../../../curves/curve";
 import { Smoke } from "../particles/smoke";
 import { Skid } from "../particles/skid";
+import { useGameStore } from "../../../store/store";
 
 type WheelProps = ThreeElements["group"] & {
   side: "left" | "right";
@@ -92,7 +93,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const topRightWheelObject = useRef<Group>(null!);
     const bottomLeftWheelObject = useRef<Group>(null!);
     const bottomRightWheelObject = useRef<Group>(null!);
-
+    const gameState = useGameStore(state => state.gameState); 
     const { headlightsSpotLightHelper } = useLeva(
       "headlights",
       {
@@ -400,6 +401,9 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         chassisRigidBodyRef.current.setRotation(spawnQuat, true);
         chassisRigidBodyRef.current.setLinvel(new Vector3(0, 0, 0), true);
         chassisRigidBodyRef.current.setAngvel(new Vector3(0, 0, 0), true);
+      }
+      if(gameState){
+        gameState.afk = afk;
       }
     });
 

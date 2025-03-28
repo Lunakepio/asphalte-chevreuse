@@ -1,9 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Orbitron:wght@400..900&display=swap');
+
 *{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Orbitron', sans-serif;
   font-smooth: always;
+  font-family: "Orbitron", sans-serif;
+  font-optical-sizing: auto;
 }
 
 body{
@@ -28,26 +31,30 @@ body{
   justify-content: center;
   align-items: center;
 }
+.speed-container{
+  position:fixed;
+  bottom : 5%;
+  right: 10%;
+  
+}
 
 .gearometer {
     color: white;
-    position: fixed;
-    bottom: 8%;
-    right: 19%;
+
     font-size:24px;
     font-variant-numeric: tabular-nums;
     text-align: center;
     display:flex;
     justify-content: center;
     align-items: center;
-    width: 2ch;
+    position:absolute;
+    scale: 0.5;
+    top:15%;
+    left:-70%;
 }
 
 .speedometer {
   color: white;
-  position: fixed;
-  bottom: 5%;
-  right: 10%;
   font-size: 36px;
   font-variant-numeric: tabular-nums;
   display: flex;
