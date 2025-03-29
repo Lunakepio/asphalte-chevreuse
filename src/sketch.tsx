@@ -60,7 +60,7 @@ export const Sketch = () => {
             <Chevreuse/>
           </Physics>
           <Lighting />
-          {/* <Composer/> */}
+          <Composer/>
           <Environment preset="night" environmentIntensity={1}/>
           {/* <Perf/> */}
         </Suspense>

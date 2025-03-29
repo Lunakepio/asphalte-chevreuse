@@ -158,10 +158,10 @@ export const PlayerController = () => {
 
     if (forward) {
       const speedFactor = 1 - Math.pow(speedKmHour / gear.maxSpeed, 2.5);
-      engineForce += maxForce * speedFactor * gear.ratio * deltaAdjusted;
+      engineForce += maxForce * speedFactor * gear.ratio
     }
     if (back) {
-      engineForce -= maxForce * deltaAdjusted;
+      engineForce -= maxForce;
     }
 
     vehicle.applyEngineForce(isClutchEngaged.current ? 0 : engineForce, 2);
