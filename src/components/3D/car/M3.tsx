@@ -10,6 +10,7 @@ import { useFrame } from "@react-three/fiber";
 import { useKeyboardControls } from "@react-three/drei";
 import { GLTF } from "three-stdlib";
 import { useControls as useLeva } from "leva";
+import { useGameStore } from "../../../store/store";
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -72,6 +73,7 @@ type GLTFResult = GLTF & {
 export function M3(props: JSX.IntrinsicElements["group"]) {
   const { nodes, materials } = useGLTF("/models/cars/M3.glb") as GLTFResult;
   const [, get] = useKeyboardControls();
+  const pause = useGameStore(state => state.pause);
 
   const leftLightRef = useRef(null);
   const rightLightRef = useRef(null);
@@ -95,6 +97,7 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
   materials["Material.002"].emissive = new THREE.Color(0xffc562);
   let intensity = 1;
   useFrame(() => {
+    if(pause) return;
     const { brake } = get();
     materials["Material.006"].emissiveIntensity = THREE.MathUtils.lerp(
       materials["Material.006"].emissiveIntensity,

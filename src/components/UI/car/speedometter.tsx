@@ -1,41 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { useGameStore } from "../../store/store";
-import { minRPM, maxRPM } from "../../constants";
+import { useGameStore } from "../../../store/store";
 
 export const Speedometer = () => {
-  const numSegments = 24; // Total segments in the arc
-  const gameState = useGameStore((state) => state.gameState);
-  const [speed, setSpeed] = useState("000");
-  const [rpm, setRPM] = useState(minRPM);
-  const purpleThreshold = 14;
+  const numSegments = 20;
+  const speed = useGameStore((state) => state.speed);
+  const formattedSpeed = String(speed).padStart(3, "0");
+  const purpleThreshold = numSegments / 1.5;
   const filledSegments = speed
     ? Math.round((speed / 280) * numSegments)
     : 0;
 
-  useEffect(() => {
-    const updateSpeed = () => {
-      if (gameState && gameState.speed !== undefined) {
-        const formattedSpeed = String(
-          Math.min(999, Math.round(gameState.speed)),
-        ).padStart(3, "0");
-        setSpeed(formattedSpeed);
-        setRPM(Math.floor(gameState.rpm))
-      }
-    };
 
-    const interval = setInterval(updateSpeed, 20);
-    return () => clearInterval(interval);
-  }, [gameState]);
 
   const getInterpolatedColor = (index: number) => {
     const t = index / (numSegments - 6);
 
     let hue;
     if (t < 0.5) {
-      // Green to Blue
       hue = 120 + (220 - 120) * (t / 0.5);
     } else {
-      // Blue to Purple
       hue = 220 + (280 - 220) * ((t - 0.5) / 0.5);
     }
 
@@ -69,7 +51,7 @@ export const Speedometer = () => {
       {/* Speed Number */}
       <div style={styles.speedText}>
         <span className="speed-digits">
-          {speed.split("").map((digit, index) => (
+          {formattedSpeed.split("").map((digit, index) => (
             <span
               key={index}
               className={`digit ${index === 0 && digit === "0" ? "zero" : ""}`}
@@ -84,7 +66,6 @@ export const Speedometer = () => {
   );
 };
 
-// Styles
 const styles = {
   container: {
     width: "200px",

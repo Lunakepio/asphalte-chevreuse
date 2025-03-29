@@ -1,37 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { useGameStore } from "../../store/store";
-import { minRPM, maxRPM } from "../../constants";
+import { useGameStore } from "../../../store/store";
+import { minRPM, maxRPM } from "../../../constants";
 import NumberFlow from "@number-flow/react";
 
 export const Gear = () => {
-  const numSegments = 24; // Total segments in the arc
-  const gameState = useGameStore((state) => state.gameState);
-  const [gear, setGear] = useState(1);
-  const [rpm, setRPM] = useState(minRPM);
-  const purpleThreshold = 18;
+  const numSegments = 16; // Total segments in the arc
+  const gear = useGameStore((state) => state.gear);
+  const rpm = useGameStore((state) => state.rpm);
+  const purpleThreshold = numSegments / 1.5;
   const filledSegments = rpm ? Math.round((rpm / maxRPM) * numSegments) : 0;
-
-  useEffect(() => {
-    const updateGear = () => {
-      if (gameState && gameState.gear !== undefined) {
-        setGear(gameState.gear);
-        setRPM(Math.floor(gameState.rpm));
-      }
-    };
-
-    const interval = setInterval(updateGear, 20);
-    return () => clearInterval(interval);
-  }, [gameState]);
 
   const getInterpolatedColor = (index: number) => {
     const t = index / (numSegments - 6);
 
     let hue;
     if (t < 0.5) {
-      // Green to Blue
       hue = 120 + (220 - 120) * (t / 0.5);
     } else {
-      // Blue to Purple
       hue = 220 + (280 - 220) * ((t - 0.5) / 0.5);
     }
 
@@ -79,7 +64,6 @@ export const Gear = () => {
   );
 };
 
-// Styles
 const styles = {
   container: {
     width: "200px",

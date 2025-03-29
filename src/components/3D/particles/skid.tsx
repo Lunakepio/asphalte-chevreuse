@@ -9,15 +9,14 @@ export const Skid = ({ bottomLeftWheelObject, bottomRightWheelObject }) => {
   const ref = useRef(null);
   const lifeTime = 50;
   const size = 0.25;
-  const minDistance = 0.1; // Minimum distance to add a skid
+  const minDistance = 0.1;
 
-  // Track previous positions, reset if not spinning
   const lastLeftPos = useRef(new Vector3());
   const lastRightPos = useRef(new Vector3());
-  const wasSpinning = useRef(false); // Track if the wheel was spinning last frame
+  const wasSpinning = useRef(false);
 
   const geometry = useMemo(() => new PlaneGeometry(size, size), [size]);
-  const material = useMemo(() => new MeshPhongMaterial({ color: 0x5c5c5c, transparent: true, depthWrite: false, side: DoubleSide }), []);
+  const material = useMemo(() => new MeshPhongMaterial({ color: 0x8C8C8C, transparent: true, depthWrite: false, side: DoubleSide }), []);
 
   useFrame((state, delta) => {
     if (!ref.current || !bottomLeftWheelObject.current || !bottomRightWheelObject.current) return;

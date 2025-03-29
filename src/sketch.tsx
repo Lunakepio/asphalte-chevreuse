@@ -2,18 +2,18 @@ import { Canvas, useLoader } from "@react-three/fiber";
 import { Physics, CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Environment, KeyboardControls } from "@react-three/drei";
 import { Leva, useControls as useLeva } from "leva";
-import { Suspense, useEffect, useLayoutEffect, useRef } from "react";
+import { Suspense, useLayoutEffect, useRef } from "react";
 import { PlayerController } from "./PlayerController";
 import { Lighting } from "./components/3D/misc/lighting";
-import { TextureLoader } from "three";
+import { ACESFilmicToneMapping, CineonToneMapping, LinearToneMapping, NoToneMapping, ReinhardToneMapping, TextureLoader } from "three";
+import { useGameStore } from "./store/store";
 
 import { Chevreuse } from "./components/3D/track/Chevreuse";
 
 import { Composer } from "./components/3D/postprocessing/composer";
-import { spawn } from "./constants";
-import { useGameStore } from "./store/store";
 
 export const Sketch = () => {
+  
   const { debug } = useLeva("physics", {
     debug: false,
   }, {
@@ -28,30 +28,19 @@ export const Sketch = () => {
     { name: "brake", keys: ["Space"] },
     { name: "handbrake", keys: ["Shift"] },
     { name: "reset", keys: ["KeyR"] },
+    { name: "pause", keys: ["Escape"] },
   ];
 
   const texture = useLoader(TextureLoader, "/grid.jpg");
-  
-  const gameStateRef = useRef(null);
-  const setGameState = useGameStore(state => state.setGameState);
-  
-
-  useLayoutEffect(() => {
-    setTimeout(() => {
-      if (gameStateRef.current) {
-        setGameState(gameStateRef.current);
-        console.log("Game state ref updated:", gameStateRef.current);
-      }
-    }, 300);
-  }, []);
+  const pause = useGameStore((state) => state.pause);
   
   return (
     <>
-      <Canvas shadows camera={{fov:90}} gl={{ antialias: true, powerPreference: "high-performance" }}>
+      <Canvas shadows camera={{fov:90}} gl={{ antialias: true, powerPreference: "high-performance"}} flat>
         <color attach="background" args={["#005249"]} />
         <fog attach="fog" args={["#002523", 50, 150]} />
         <Suspense fallback={null}>
-          <Physics gravity={[0, -9.81, 0]} timeStep="vary" debug={debug}>
+          <Physics gravity={[0, -9.81, 0]} timeStep={'vary'} debug={debug}>
             <KeyboardControls map={controls}>
               <PlayerController />
             </KeyboardControls>
@@ -71,12 +60,10 @@ export const Sketch = () => {
             <Chevreuse/>
           </Physics>
           <Lighting />
-          <Composer/>
+          {/* <Composer/> */}
           <Environment preset="night" environmentIntensity={1}/>
           {/* <Perf/> */}
         </Suspense>
-        <group ref={gameStateRef}></group>
-
         <Leva  fill // default = false,  true makes the pane fill the parent dom node it's rendered in
         flat // default = false,  true removes border radius and shadow
         oneLineLabels // default = false, alternative layout for labels, with labels and fields on separate rows

@@ -3,7 +3,6 @@ import { extend, ThreeEvent, useFrame } from '@react-three/fiber';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { BoxGeometry,  MathUtils,  MeshPhongMaterial, OctahedronGeometry, Vector3 } from 'three';
 
-// add InstancedMesh2 to the jsx catalog i.e use it as a jsx component
 extend({ InstancedMesh2 });
 
 export const Smoke = ({ exhaustRef, vehicleRef }) => {

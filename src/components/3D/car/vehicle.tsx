@@ -88,12 +88,13 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const cameraTargetRef = useRef<Mesh>(null);
     const chassisMeshRef = useRef<Mesh>(null);
     const exhaustRef = useRef<Mesh>(null);
+    const setAfk = useGameStore((state) => state.setAfk);
+    const pause = useGameStore((state) => state.pause);
 
     const topLeftWheelObject = useRef<Group>(null!);
     const topRightWheelObject = useRef<Group>(null!);
     const bottomLeftWheelObject = useRef<Group>(null!);
     const bottomRightWheelObject = useRef<Group>(null!);
-    const gameState = useGameStore(state => state.gameState); 
     const { headlightsSpotLightHelper } = useLeva(
       "headlights",
       {
@@ -168,7 +169,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
         // Acceleration settings: sharper throttle response for performance
         forwardAcceleration: 2, // increased engine force for rapid acceleration
-        sideAcceleration: 2.2, // slightly lower to help keep the car stable in turns
+        sideAcceleration: 2.7, // slightly lower to help keep the car stable in turns
 
         vehicleWidth: 1.33,
         vehicleHeight: 0.05,
@@ -299,7 +300,8 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       if (
         !cameraPositionRef.current ||
         !cameraTargetRef.current ||
-        !chassisMeshRef.current
+        !chassisMeshRef.current ||
+        pause
       )
         return;
       const deltaAdjusted = delta * 60;
@@ -361,7 +363,6 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
             currentPoint -= 1;
           }
 
-          // console.log(positionTarget);
         } else {
           currentPoint = data.length - 1;
           state.camera.position.copy(
@@ -392,6 +393,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       bottomLeftWheelObject.current.isSpinning = isSpinning;
 
       if (bodyPosition.y < -10) {
+        
         chassisRigidBodyRef.current.setTranslation(
           new Vector3(...spawn.position),
           true
@@ -402,9 +404,8 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         chassisRigidBodyRef.current.setLinvel(new Vector3(0, 0, 0), true);
         chassisRigidBodyRef.current.setAngvel(new Vector3(0, 0, 0), true);
       }
-      if(gameState){
-        gameState.afk = afk;
-      }
+
+      setAfk(afk);
     });
 
     return (
@@ -414,6 +415,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           colliders={false}
           ref={chassisRigidBodyRef}
           mass={150}
+          name="car"
         >
           <group ref={cameraPositionRef} {...cameraPositionControls}>
             {/* <boxGeometry args={[1, 1, 1]} /> */}
@@ -450,7 +452,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
                 decay={0.1}
                 castShadow={idx === 0}
                 penumbra={0.8}
-                intensity={63}
+                intensity={100}
                 color={0xffc562}
                 shadow-mapSize-height={4096}
                 shadow-mapSize-width={4096}

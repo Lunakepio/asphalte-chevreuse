@@ -208,10 +208,8 @@ export class RapierRaycastVehicle {
     }
 
     private resetStates(): void {
-        // reset vehicle state
         this.state.sliding = false
 
-        // reset wheel states
         for (let i = 0; i < this.wheels.length; i++) {
             const wheel = this.wheels[i]
 
@@ -221,7 +219,6 @@ export class RapierRaycastVehicle {
     }
 
     private updateWheelTransformWorld(wheel: Wheel): void {
-        // update wheel transform world
         const chassisBody = this.chassisRigidBody
 
         pointToWorldFrame(chassisBody, wheel.options.chassisConnectionPointLocal, wheel.state.chassisConnectionPointWorld)

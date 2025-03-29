@@ -2,11 +2,11 @@ import { OrbitControls, useKeyboardControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useBeforePhysicsStep } from "@react-three/rapier";
 import { useControls as useLeva } from "leva";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { MathUtils, Quaternion, Vector3 } from "three";
 import { Vehicle, VehicleRef } from "./components/3D/car/vehicle";
 import { AFTER_RAPIER_UPDATE, maxRPM, minRPM, gears } from "./constants";
-import { useGameStore } from "./store/store";
+import { useGameStatsStore, useGameStore } from "./store/store";
 
 const chassisTranslation = new Vector3();
 const chassisRotation = new Quaternion();
@@ -15,8 +15,20 @@ export const PlayerController = () => {
   const raycastVehicle = useRef<VehicleRef>(null);
 
   const [, get] = useKeyboardControls();
-  const gameState = useGameStore((state) => state.gameState);
+  const addDistance = useGameStatsStore((state) => state.addDistance);
+  const setSpeed = useGameStore((state) => state.setSpeed);
+  const setGear = useGameStore((state) => state.setGear);
+  const setRpm = useGameStore((state) => state.setRpm);
+  const togglePause = useGameStore((state) => state.togglePause);
+  const pause = useGameStore((state) => state.pause);
+  const pausePressed = useKeyboardControls((state) => state.pause);
+  
 
+  useEffect(() => {
+    if (pausePressed) {
+      togglePause();
+    }
+  }, [pausePressed, togglePause]);
 
   const { cameraMode } = useLeva(
     "camera",
@@ -36,7 +48,7 @@ export const PlayerController = () => {
     {
       maxForce: 12.5,
       maxSteer: { value: Math.PI / 12, min: 0, max: Math.PI / 6 },
-      maxBrake: 0.15,
+      maxBrake: 0.5,
     },
     {
       collapsed: true,
@@ -52,43 +64,52 @@ export const PlayerController = () => {
   const lastGearChangeTime = useRef(performance.now());
   const gearChangeCooldown = 1000;
   const isClutchEngaged = useRef(false);
-  
+  const distanceDone = useRef(0);
+
   const updateGearbox = (speed: number, isBraking: boolean) => {
     const absSpeed = Math.max(0, Math.abs(speed));
     const gear = gears[currentGearRef.current - 1];
-  
+
     rpmRef.current = (absSpeed / gear.maxSpeed) * (maxRPM - minRPM) + minRPM;
-  
+
     if (isBraking) {
       rpmRef.current *= 0.85;
     }
-  
+
     rpmRef.current = Math.max(minRPM, rpmRef.current);
-  
+
     const now = performance.now();
-  
-    if (isClutchEngaged.current && now - lastGearChangeTime.current > gearChangeCooldown) {
+
+    if (
+      isClutchEngaged.current &&
+      now - lastGearChangeTime.current > gearChangeCooldown
+    ) {
       isClutchEngaged.current = false;
     }
-  
-    if (rpmRef.current > maxRPM * 0.9 && currentGearRef.current < gears.length) {
-      if (now - lastGearChangeTime.current > gearChangeCooldown) { 
+
+    if (
+      rpmRef.current > maxRPM * 0.9 &&
+      currentGearRef.current < gears.length
+    ) {
+      if (now - lastGearChangeTime.current > gearChangeCooldown) {
         currentGearRef.current++;
         lastGearChangeTime.current = now;
         isClutchEngaged.current = true;
       }
     }
-  
-    if ((rpmRef.current < 2000 || speed < gears[currentGearRef.current - 1].maxSpeed * 0.6) 
-        && currentGearRef.current > 1) {
+
+    if (
+      (rpmRef.current < 2000 ||
+        speed < gears[currentGearRef.current - 1].maxSpeed * 0.6) &&
+      currentGearRef.current > 1
+    ) {
       if (now - lastGearChangeTime.current > gearChangeCooldown) {
         currentGearRef.current--;
         lastGearChangeTime.current = now;
         isClutchEngaged.current = true;
-
       }
     }
-  
+
     if (isBraking && absSpeed < 10 && currentGearRef.current > 1) {
       if (now - lastGearChangeTime.current > gearChangeCooldown) {
         currentGearRef.current = Math.max(1, currentGearRef.current - 1);
@@ -98,9 +119,6 @@ export const PlayerController = () => {
     }
   };
 
-
-
-
   useBeforePhysicsStep((world) => {
     if (
       !raycastVehicle.current ||
@@ -109,10 +127,13 @@ export const PlayerController = () => {
       return;
     }
 
+    if(pause){
+      world.sleep();
+    }
     const timestep = world.timestep;
     const currentTime = performance.now() / 1000;
 
-    let deltaTime = timestep; // Default to the physics step
+    let deltaTime = timestep;
     if (lastTimeRef.current !== null) {
       deltaTime = currentTime - lastTimeRef.current;
     }
@@ -128,24 +149,23 @@ export const PlayerController = () => {
     } = raycastVehicle.current;
 
     const speedKmHour = Math.abs(vehicle.state.currentVehicleSpeedKmHour);
+    const speedMetersPerSecond = speedKmHour * (1000 / 3600); // Convert km/h to m/s
     updateGearbox(speedKmHour, brake);
 
     const gear = gears[currentGearRef.current - 1];
 
     let engineForce = 0;
-    
-      if (forward) {
-        const speedFactor = 1 - Math.pow(speedKmHour / gear.maxSpeed, 2.5);
-        engineForce += maxForce * speedFactor * gear.ratio;
-      }
-      if (back) {
-        engineForce -= maxForce;
-      }
-    
-    console.log(isClutchEngaged.current);
+
+    if (forward) {
+      const speedFactor = 1 - Math.pow(speedKmHour / gear.maxSpeed, 2.5);
+      engineForce += maxForce * speedFactor * gear.ratio * deltaAdjusted;
+    }
+    if (back) {
+      engineForce -= maxForce * deltaAdjusted;
+    }
+
     vehicle.applyEngineForce(isClutchEngaged.current ? 0 : engineForce, 2);
     vehicle.applyEngineForce(isClutchEngaged.current ? 0 : engineForce, 3);
-
 
     currentSteering.current = MathUtils.lerp(
       currentSteering.current,
@@ -153,7 +173,11 @@ export const PlayerController = () => {
       0.01 * deltaAdjusted,
     );
 
-    const brakeForce = brake ? maxBrake : !forward ? 0.05 : 0;
+    const brakeForce = brake
+      ? maxBrake * deltaAdjusted
+      : !forward
+        ? 0.05 * deltaAdjusted
+        : 0;
 
     vehicle.setBrakeValue(brakeForce * 0.6, 0);
     vehicle.setBrakeValue(brakeForce * 0.6, 1);
@@ -164,7 +188,6 @@ export const PlayerController = () => {
       vehicle.setBrakeValue(brakeForce * 10, 2);
       vehicle.setBrakeValue(brakeForce * 10, 3);
     }
-
 
     vehicle.setSteeringValue(currentSteering.current, 0);
     vehicle.setSteeringValue(currentSteering.current, 1);
@@ -183,15 +206,17 @@ export const PlayerController = () => {
       wheelObject.quaternion.copy(wheelState.worldTransform.quaternion);
     }
 
-    if (gameState) {
-      gameState.speed = Math.floor(speedKmHour);
-      gameState.gear = currentGearRef.current;
-      gameState.rpm = rpmRef.current;
+      setSpeed(Math.floor(speedKmHour));
+      setGear(currentGearRef.current);
+      setRpm(Math.floor(rpmRef.current));
+
+    if (speedMetersPerSecond > 0) {
+      addDistance(speedMetersPerSecond * deltaTime);
     }
   });
 
   useFrame(() => {
-    if (cameraMode !== "drive") return;
+    if (cameraMode !== "drive" || pause) return;
 
     const chassis = raycastVehicle.current?.chassisRigidBody;
     if (!chassis?.current) return;
