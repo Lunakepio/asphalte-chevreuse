@@ -151,17 +151,22 @@ export const PlayerController = () => {
     const speedKmHour = Math.abs(vehicle.state.currentVehicleSpeedKmHour);
     const speedMetersPerSecond = speedKmHour * (1000 / 3600); // Convert km/h to m/s
     updateGearbox(speedKmHour, brake);
+    const gameStarted = useGameStore.getState().gameStarted;
 
     const gear = gears[currentGearRef.current - 1];
 
     let engineForce = 0;
 
-    if (forward) {
-      const speedFactor = 1 - Math.pow(speedKmHour / gear.maxSpeed, 2.5);
-      engineForce += maxForce * speedFactor * gear.ratio
-    }
-    if (back) {
-      engineForce -= maxForce;
+
+    console.log(gameStarted);
+    if(gameStarted){
+      if (forward) {
+        const speedFactor = 1 - Math.pow(speedKmHour / gear.maxSpeed, 2.5);
+        engineForce += maxForce * speedFactor * gear.ratio
+      }
+      if (back) {
+        engineForce -= maxForce;
+      }
     }
 
     vehicle.applyEngineForce(isClutchEngaged.current ? 0 : engineForce, 2);

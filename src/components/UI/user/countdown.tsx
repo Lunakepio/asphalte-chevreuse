@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { gsap } from "gsap";
 import NumberFlow from "@number-flow/react";
 import { useGSAP } from "@gsap/react";
+import { useGameStore } from "../../../store/store";
 
 export const Countdown = () => {
   const size = 130;
@@ -11,60 +12,89 @@ export const Countdown = () => {
 
   const circleRef = useRef(null);
   const countdownRef = useRef(null);
-  const [count, setCount] = useState(4);
+  const startRef = useRef(null);
+  const setGameStarted = useGameStore(state => state.setGameStarted);
+  const count = useGameStore(state => state.count);
+  const setCount = useGameStore(state => state.setCount);
 
   useGSAP(() => {
     setTimeout(() => {
       gsap.to(countdownRef.current, {
         opacity: 1,
-        duration: 0.3,
+        duration: 0.2,
       });
+
       gsap.fromTo(
         circleRef.current,
         { strokeDashoffset: circumference },
         {
           strokeDashoffset: 0,
-          duration: 3,
-          delay: -3,
-          ease: "power1.inOut",
-        }
+          duration: 1,
+          ease: "power4.inOut",
+        },
       );
-
-      let countdown = 4;
+      let countdown = 3;
+      if (countdown <= 1) {
+        gsap.to(countdownRef.current, {
+          opacity: 0,
+          duration: 0.2,
+        });
+      }
       const interval = setInterval(() => {
         countdown -= 1;
-        setCount(countdown);
-        if (countdown === 0) clearInterval(interval);
+       if(countdown >= 1) {
+         setCount(countdown);
+         gsap.fromTo(
+           circleRef.current,
+           { strokeDashoffset: circumference },
+           {
+             strokeDashoffset: 0,
+             duration: 1,
+             ease: "power4.inOut",
+           },
+         );
+       }
+
+        if (countdown === -3) clearInterval(interval);
       }, 1000);
 
       return () => clearInterval(interval);
     }, 1000);
   }, []);
 
+  useGSAP(() => {
+    if (count === 1) {
+      gsap.to(countdownRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        delay: 1,
+      });
+      gsap.to(circleRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        delay: 1,
+        onComplete: () => {
+          setGameStarted(true);
+          gsap.to(startRef.current, {
+            opacity: 1,
+            duration: 2,
+            scale: 1,
+            ease: "power4.out",
+            onComplete: () => {
+              gsap.to(startRef.current, {
+                opacity: 0,
+                duration: 0.2,
+              });
+            },
+          });
+        },
+      });
+    }
+  }, [count]);
+  
   return (
     <div className="countdown">
       <svg width={size} height={size} style={{ overflow: "visible" }}>
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Background circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="#ffffff30"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-        />
-
-        {/* Animated progress circle */}
         <circle
           ref={circleRef}
           cx={size / 2}
@@ -77,9 +107,7 @@ export const Countdown = () => {
           strokeDashoffset={circumference}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
           style={{
-            filter: "url(#glow)", // Glow effect
-            stroke: "rgba(255, 255, 255, 0.8)", // Soft white glow
-            transition: "stroke-dashoffset 3s ease-in-out",
+            stroke: "rgba(255, 255, 255, 1)", // Soft white glow
           }}
         />
       </svg>
@@ -88,6 +116,7 @@ export const Countdown = () => {
       <div className="countdown-container" ref={countdownRef}>
         <NumberFlow value={count} />
       </div>
+      <div className="start" ref={startRef}>START!</div>
     </div>
   );
 };

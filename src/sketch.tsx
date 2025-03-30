@@ -2,11 +2,13 @@ import { Canvas, useLoader } from "@react-three/fiber";
 import { Physics, CuboidCollider, RigidBody } from "@react-three/rapier";
 import { Environment, KeyboardControls } from "@react-three/drei";
 import { Leva, useControls as useLeva } from "leva";
-import { Suspense, useLayoutEffect, useRef } from "react";
+import { Suspense, useRef, useEffect } from "react";
 import { PlayerController } from "./PlayerController";
 import { Lighting } from "./components/3D/misc/lighting";
-import { ACESFilmicToneMapping, CineonToneMapping, LinearToneMapping, NoToneMapping, ReinhardToneMapping, TextureLoader } from "three";
+import { TextureLoader } from "three";
 import { useGameStore } from "./store/store";
+import { Perf } from "r3f-perf";
+import { spawn } from "./constants";
 
 import { Chevreuse } from "./components/3D/track/Chevreuse";
 
@@ -45,9 +47,9 @@ export const Sketch = () => {
               <PlayerController />
             </KeyboardControls>
             {/* ground */}
-            {/* <RigidBody
+            <RigidBody
               type="fixed"
-              position={[spawn.position[0], spawn.position[1] - 10, spawn.position[2]]}
+              position={[spawn.position[0], spawn.position[1]-3, spawn.position[2]]}
               colliders={false}
               friction={1}
             >
@@ -56,13 +58,13 @@ export const Sketch = () => {
                 <boxGeometry args={[240, 10, 240]} />
                 <meshStandardMaterial color="#AA3030" map={texture}/>
               </mesh>
-            </RigidBody> */}
-            <Chevreuse/>
+            </RigidBody>
+            {/* <Chevreuse/> */}
           </Physics>
           <Lighting />
-          <Composer/>
+          {/* <Composer/> */}
           <Environment preset="night" environmentIntensity={1}/>
-          {/* <Perf/> */}
+          <Perf/>
         </Suspense>
         <Leva  fill // default = false,  true makes the pane fill the parent dom node it's rendered in
         flat // default = false,  true removes border radius and shadow

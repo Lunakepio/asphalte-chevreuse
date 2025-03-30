@@ -5,6 +5,12 @@ import { persist } from "zustand/middleware";
 export const useGameStore = create((set, get) => ({
   gameState: undefined,
   setGameState: (newState) => set({ gameState: newState }),
+  gameStarted: false,
+  setGameStarted: (newGameStarted) => set({ gameStarted: newGameStarted }),
+  count: 3,
+  decrementCount: () => set({ count: get().count - 1 }),
+  incrementCount: () => set({ count: get().count + 1 }),
+  setCount: (newCount) => set({ count: newCount }),
   afk: false,
   setAfk: (newAfk) => set({ afk: newAfk }),
   gear: 1,

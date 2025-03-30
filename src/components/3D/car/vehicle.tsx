@@ -40,6 +40,7 @@ import { data } from "../../../curves/curve";
 import { Smoke } from "../particles/smoke";
 import { Skid } from "../particles/skid";
 import { useGameStore } from "../../../store/store";
+import { curve1 } from "../../../curves/countdown/curve1";
 
 type WheelProps = ThreeElements["group"] & {
   side: "left" | "right";
@@ -102,7 +103,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      }
+      },
     );
     const cameraPositionControls = useLeva(
       "Camera Position",
@@ -112,7 +113,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      }
+      },
     );
 
     const cameraLookAtControls = useLeva(
@@ -122,7 +123,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      }
+      },
     );
 
     const {
@@ -178,16 +179,16 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      }
+      },
     );
 
     const directionLocal = useMemo(
       () => new Vector3(...directionLocalArray),
-      [directionLocalArray]
+      [directionLocalArray],
     );
     const axleLocal = useMemo(
       () => new Vector3(...axleLocalArray),
-      [axleLocalArray]
+      [axleLocalArray],
     );
 
     const commonWheelOptions = {
@@ -204,7 +205,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleBack,
             vehicleHeight,
-            vehicleWidth * 0.5
+            vehicleWidth * 0.5,
           ),
         },
       },
@@ -215,7 +216,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleBack,
             vehicleHeight,
-            vehicleWidth * -0.5
+            vehicleWidth * -0.5,
           ),
         },
       },
@@ -226,7 +227,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleFront,
             vehicleHeight,
-            vehicleWidth * 0.5
+            vehicleWidth * 0.5,
           ),
         },
       },
@@ -237,7 +238,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleFront,
             vehicleHeight,
-            vehicleWidth * -0.5
+            vehicleWidth * -0.5,
           ),
         },
       },
@@ -292,10 +293,13 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     let afkTimer = 0;
     const afkThreshold = 4;
     const [, get] = useKeyboardControls();
-    const cameraSpeedFactor = 0.01;
-    let currentPoint = data.length - 1;
+    const frameRate = 60;
+    const animationDuration = 1;
+    const cameraSpeedFactor = 1 / (frameRate * animationDuration);    let currentPoint = curve1.length - 1;
+
     let turningTime = 0;
     const turningThreshold = 0.3;
+    const animationProgress = useRef(0);
     useFrame((state, delta) => {
       if (
         !cameraPositionRef.current ||
@@ -306,6 +310,8 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         return;
       const deltaAdjusted = delta * 60;
       afkTimer += delta;
+      const gameStarted = useGameStore.getState().gameStarted;
+
       const { forward, back, left, right, brake } = get();
       if (forward || back || left || right || brake) {
         afk = false;
@@ -313,6 +319,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       }
 
       if (
+        gameStarted &&
         afkTimer > afkThreshold &&
         Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) < 1
       ) {
@@ -325,19 +332,19 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         }
       }
 
-      if (!afk) {
+      if (!afk && gameStarted) {
         state.camera.position.lerp(
           cameraPositionRef.current.getWorldPosition(new Vector3()),
-          0.12 * deltaAdjusted
+          0.12 * deltaAdjusted,
         );
         state.camera.lookAt(
-          cameraTargetRef.current.getWorldPosition(new Vector3())
+          cameraTargetRef.current.getWorldPosition(new Vector3()),
         );
       }
 
       if (afk) {
         state.camera.lookAt(
-          chassisMeshRef.current.getWorldPosition(new Vector3())
+          chassisMeshRef.current.getWorldPosition(new Vector3()),
         );
 
         if (currentPoint > 0) {
@@ -355,21 +362,47 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           } else {
             state.camera.position.lerp(
               positionTarget,
-              cameraSpeedFactor * deltaAdjusted
+              cameraSpeedFactor * deltaAdjusted,
             );
           }
 
           if (state.camera.position.distanceTo(positionTarget) < 0.5) {
             currentPoint -= 1;
           }
-
         } else {
           currentPoint = data.length - 1;
           state.camera.position.copy(
             chassisMeshRef.current
               .getWorldPosition(new Vector3())
-              .add(data[currentPoint])
+              .add(data[currentPoint]),
           );
+        }
+      }
+
+      if (!gameStarted) {
+        state.camera.lookAt(
+          chassisMeshRef.current.getWorldPosition(new Vector3()),
+        );
+
+        if (currentPoint > 0) {
+          const positionTarget = chassisMeshRef.current
+            .getWorldPosition(new Vector3())
+            .add(curve1[currentPoint]);
+          const distanceToTarget =
+            state.camera.position.distanceTo(positionTarget);
+          console.log(distanceToTarget)
+          if (distanceToTarget > 1) {
+            state.camera.position.copy(positionTarget);
+          } else {
+            state.camera.position.lerp(
+              positionTarget,
+              cameraSpeedFactor
+            );
+          }
+
+          if (state.camera.position.distanceTo(positionTarget) < 0.2) {
+            currentPoint -= 1;
+          }
         }
       }
 
@@ -381,9 +414,11 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       //   true
       // );
 
-      if(left || right){turningTime+=delta;} else {turningTime=0;}
-      
-    
+      if (left || right) {
+        turningTime += delta;
+      } else {
+        turningTime = 0;
+      }
 
       const isSpinning =
         (Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) > 90 &&
@@ -393,10 +428,9 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       bottomLeftWheelObject.current.isSpinning = isSpinning;
 
       if (bodyPosition.y < -10) {
-        
         chassisRigidBodyRef.current.setTranslation(
           new Vector3(...spawn.position),
-          true
+          true,
         );
         const spawnRot = new Euler(...spawn.rotation);
         const spawnQuat = new Quaternion().setFromEuler(spawnRot);
@@ -501,5 +535,5 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         </group>
       </>
     );
-  }
+  },
 );

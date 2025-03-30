@@ -56,7 +56,7 @@ export const Gear = () => {
         {/* Speed Number */}
         <div style={styles.speedText}>
           <span className="gear">
-            <NumberFlow value={gear} />
+            <NumberFlow value={gear} trend={0} />
           </span>
         </div>
       </div>
