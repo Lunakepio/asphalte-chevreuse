@@ -31,8 +31,8 @@ export const Success = () => {
         <img src="/success/plot.png" alt="Success" />
       </div>
       <div className="content">
-        <p className="title">Cone Crusher</p>
-        <p className="message">The path has never been this clear...</p>
+        <p className="title">Destructeur de plots</p>
+        <p className="message">La route n'a jamais été aussi dégagé...</p>
       </div>
     </div>
   );

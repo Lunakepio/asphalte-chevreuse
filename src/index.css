@@ -168,3 +168,24 @@ body{
     font-size: 14px;
 }
 
+.countdown{
+  display:flex;
+   justify-content: center;
+   align-items: center;
+   width: 200px;
+   height: 200px;
+
+}
+
+.countdown-container {
+  display:flex;
+   justify-content: center;
+   align-items: center;
+   font-size: 48px;
+   font-weight: 800;
+   color: white;
+   position:fixed;
+   width: 2ch;
+   font-variant-numeric: tabular-nums;
+   opacity: 0;
+}
