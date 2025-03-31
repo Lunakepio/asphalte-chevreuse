@@ -1,7 +1,7 @@
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { extend, useFrame } from '@react-three/fiber';
 import { useRef, useMemo } from 'react';
-import { PlaneGeometry, MeshPhongMaterial, DoubleSide, Vector3, Euler } from 'three';
+import { PlaneGeometry, MeshPhongMaterial, DoubleSide, Vector3, Euler, MeshNormalMaterial } from 'three';
 
 extend({ InstancedMesh2 });
 
@@ -16,14 +16,15 @@ export const Skid = ({ bottomLeftWheelObject, bottomRightWheelObject }) => {
   const wasSpinning = useRef(false);
 
   const geometry = useMemo(() => new PlaneGeometry(size, size), [size]);
-  const material = useMemo(() => new MeshPhongMaterial({ color: 0x8C8C8C, transparent: true, depthWrite: false, side: DoubleSide }), []);
+  // const material = useMemo(() => new MeshPhongMaterial({ color: 0x8C8C8C, transparent: true, depthWrite: false, side: DoubleSide }), []);
+  const material = new MeshNormalMaterial();
 
   useFrame((state, delta) => {
     if (!ref.current || !bottomLeftWheelObject.current || !bottomRightWheelObject.current) return;
 
     const leftPos = bottomLeftWheelObject.current.getWorldPosition(new Vector3());
     const rightPos = bottomRightWheelObject.current.getWorldPosition(new Vector3());
-    const rotationY = bottomLeftWheelObject.current.getWorldQuaternion(new Euler()).z;
+    const rotationY = bottomLeftWheelObject.current.getWorldQuaternion(new Euler()).x;
     const isSpinning = bottomLeftWheelObject.current.isSpinning;
 
     if (isSpinning) {

@@ -47,32 +47,32 @@ export const Sketch = () => {
               <PlayerController />
             </KeyboardControls>
             {/* ground */}
-            <RigidBody
+            {/* <RigidBody
               type="fixed"
-              position={[spawn.position[0], spawn.position[1]-3, spawn.position[2]]}
+              position={[spawn.position[0], spawn.position[1]-8, spawn.position[2]]}
               colliders={false}
               friction={1}
             >
-              <CuboidCollider args={[120, 5, 120]} />
+              <CuboidCollider args={[250, 5, 250]} />
               <mesh receiveShadow>
-                <boxGeometry args={[240, 10, 240]} />
+                <boxGeometry args={[500, 10, 500]} />
                 <meshStandardMaterial color="#AA3030" map={texture}/>
               </mesh>
-            </RigidBody>
-            {/* <Chevreuse/> */}
+            </RigidBody>  */}
+            <Chevreuse/>
           </Physics>
           <Lighting />
           {/* <Composer/> */}
           <Environment preset="night" environmentIntensity={1}/>
-          <Perf/>
+          {/* <Perf/> */}
         </Suspense>
-        <Leva  fill // default = false,  true makes the pane fill the parent dom node it's rendered in
+        {/* <Leva  fill // default = false,  true makes the pane fill the parent dom node it's rendered in
         flat // default = false,  true removes border radius and shadow
         oneLineLabels // default = false, alternative layout for labels, with labels and fields on separate rows
         hideTitleBar // default = false, hides the GUI header
         collapsed // default = false, when true the GUI is collpased
         hidden // def
-        />
+        /> */}
       </Canvas>
     </>
   );

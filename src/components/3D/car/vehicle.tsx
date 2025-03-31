@@ -27,6 +27,7 @@ import {
   Vector3Tuple,
   Euler,
   Quaternion,
+  MathUtils,
 } from "three";
 import {
   RapierRaycastVehicle,
@@ -103,7 +104,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      },
+      }
     );
     const cameraPositionControls = useLeva(
       "Camera Position",
@@ -113,7 +114,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      },
+      }
     );
 
     const cameraLookAtControls = useLeva(
@@ -123,7 +124,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       },
       {
         collapsed: true,
-      },
+      }
     );
 
     const {
@@ -149,46 +150,45 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         directionLocal: [0, -1, 0],
         axleLocal: [0, 0, 1],
 
-        // Suspension settings: stiffer springs, reduced travel for less body roll
-        suspensionStiffness: 15, // increased stiffness for better grip and responsiveness
-        suspensionRestLength: 0.4, // shorter rest length for a firmer feel
-        maxSuspensionForce: 60000, // higher force to maintain control under load
-        maxSuspensionTravel: 0.7, // reduced travel to limit excessive body movement
+  // Suspension settings: stiffer springs, reduced travel for less body roll
+  suspensionStiffness: 15, // increased stiffness for better grip and responsiveness
+  suspensionRestLength: 0.35, // shorter rest length for a firmer feel
+  maxSuspensionForce: 60000, // higher force to maintain control under load
+  maxSuspensionTravel: 0.25, // reduced travel to limit excessive body movement
 
-        // Tire friction settings: more lateral grip and less slip
-        sideFrictionStiffness: 2.3, // increased lateral grip for fast cornering
-        frictionSlip: 1.4, // lower slip for improved traction during aggressive driving
+  // Tire friction settings: more lateral grip and less slip
+  sideFrictionStiffness: 2.3, // increased lateral grip for fast cornering
+  frictionSlip: 3, // lower slip for improved traction during aggressive driving
 
-        // Damping adjustments: a bit higher to quickly settle the suspension
-        dampingRelaxation: 3.5, // increased for faster recovery after bumps
-        dampingCompression: 3.5, // matching compression damping for balanced behavior
+  // Damping adjustments: a bit higher to quickly settle the suspension
+  dampingRelaxation: 3.5, // increased for faster recovery after bumps
+  dampingCompression: 3.5, // matching compression damping for balanced behavior
 
-        rollInfluence: 0.02, // lower roll influence to minimize body roll
+  rollInfluence: 0.02, // lower roll influence to minimize body roll
 
-        customSlidingRotationalSpeed: -15, // reduced sliding tendency for a grip car feel
-        useCustomSlidingRotationalSpeed: true,
+  customSlidingRotationalSpeed: -15, // reduced sliding tendency for a grip car feel
+  useCustomSlidingRotationalSpeed: true,
 
-        // Acceleration settings: sharper throttle response for performance
-        forwardAcceleration: 2, // increased engine force for rapid acceleration
-        sideAcceleration: 2.7, // slightly lower to help keep the car stable in turns
-
+  // Acceleration settings: sharper throttle response for performance
+  forwardAcceleration: 2, // increased engine force for rapid acceleration
+  sideAcceleration: 2.2, // slightly lower to help keep the car stable in turns
         vehicleWidth: 1.33,
         vehicleHeight: 0.05,
         vehicleFront: -1.13,
         vehicleBack: 1.38,
       },
       {
-        collapsed: true,
-      },
+        collapsed: false,
+      }
     );
 
     const directionLocal = useMemo(
       () => new Vector3(...directionLocalArray),
-      [directionLocalArray],
+      [directionLocalArray]
     );
     const axleLocal = useMemo(
       () => new Vector3(...axleLocalArray),
-      [axleLocalArray],
+      [axleLocalArray]
     );
 
     const commonWheelOptions = {
@@ -205,7 +205,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleBack,
             vehicleHeight,
-            vehicleWidth * 0.5,
+            vehicleWidth * 0.5
           ),
         },
       },
@@ -216,7 +216,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleBack,
             vehicleHeight,
-            vehicleWidth * -0.5,
+            vehicleWidth * -0.5
           ),
         },
       },
@@ -227,7 +227,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleFront,
             vehicleHeight,
-            vehicleWidth * 0.5,
+            vehicleWidth * 0.5
           ),
         },
       },
@@ -238,7 +238,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           chassisConnectionPointLocal: new Vector3(
             vehicleFront,
             vehicleHeight,
-            vehicleWidth * -0.5,
+            vehicleWidth * -0.5
           ),
         },
       },
@@ -295,7 +295,8 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const [, get] = useKeyboardControls();
     const frameRate = 60;
     const animationDuration = 1;
-    const cameraSpeedFactor = 1 / (frameRate * animationDuration);    let currentPoint = curve1.length - 1;
+    const cameraSpeedFactor = 1 / (frameRate * animationDuration);
+    let currentPoint = curve1.length - 1;
 
     let turningTime = 0;
     const turningThreshold = 0.3;
@@ -335,16 +336,28 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       if (!afk && gameStarted) {
         state.camera.position.lerp(
           cameraPositionRef.current.getWorldPosition(new Vector3()),
-          0.12 * deltaAdjusted,
+          0.12 * deltaAdjusted
         );
         state.camera.lookAt(
-          cameraTargetRef.current.getWorldPosition(new Vector3()),
+          cameraTargetRef.current.getWorldPosition(new Vector3())
         );
       }
 
+      cameraTargetRef.current.position.z = MathUtils.lerp(
+        cameraTargetRef.current.position.z,
+        left ? -2 : right ? 2 : 0,
+        0.01 * deltaAdjusted
+      );
+
+      cameraPositionRef.current.position.z = MathUtils.lerp(
+        cameraPositionRef.current.position.z,
+        left ? 5 : right ? -5 : 0,
+        0.01 * deltaAdjusted
+      );
+
       if (afk) {
         state.camera.lookAt(
-          chassisMeshRef.current.getWorldPosition(new Vector3()),
+          chassisMeshRef.current.getWorldPosition(new Vector3())
         );
 
         if (currentPoint > 0) {
@@ -362,7 +375,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           } else {
             state.camera.position.lerp(
               positionTarget,
-              cameraSpeedFactor * deltaAdjusted,
+              cameraSpeedFactor * deltaAdjusted
             );
           }
 
@@ -374,37 +387,37 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           state.camera.position.copy(
             chassisMeshRef.current
               .getWorldPosition(new Vector3())
-              .add(data[currentPoint]),
+              .add(data[currentPoint])
           );
         }
       }
 
-      if (!gameStarted) {
-        state.camera.lookAt(
-          chassisMeshRef.current.getWorldPosition(new Vector3()),
-        );
+      // if (!gameStarted) {
+      //   state.camera.lookAt(
+      //     chassisMeshRef.current.getWorldPosition(new Vector3()),
+      //   );
 
-        if (currentPoint > 0) {
-          const positionTarget = chassisMeshRef.current
-            .getWorldPosition(new Vector3())
-            .add(curve1[currentPoint]);
-          const distanceToTarget =
-            state.camera.position.distanceTo(positionTarget);
-          console.log(distanceToTarget)
-          if (distanceToTarget > 1) {
-            state.camera.position.copy(positionTarget);
-          } else {
-            state.camera.position.lerp(
-              positionTarget,
-              cameraSpeedFactor
-            );
-          }
+      //   if (currentPoint > 0) {
+      //     const positionTarget = chassisMeshRef.current
+      //       .getWorldPosition(new Vector3())
+      //       .add(curve1[currentPoint]);
+      //     const distanceToTarget =
+      //       state.camera.position.distanceTo(positionTarget);
+      //     console.log(distanceToTarget)
+      //     if (distanceToTarget > 1) {
+      //       state.camera.position.copy(positionTarget);
+      //     } else {
+      //       state.camera.position.lerp(
+      //         positionTarget,
+      //         cameraSpeedFactor
+      //       );
+      //     }
 
-          if (state.camera.position.distanceTo(positionTarget) < 0.2) {
-            currentPoint -= 1;
-          }
-        }
-      }
+      //     if (state.camera.position.distanceTo(positionTarget) < 0.2) {
+      //       currentPoint -= 1;
+      //     }
+      //   }
+      // }
 
       const bodyPosition = chassisRigidBodyRef.current.translation();
       // const yaw = chassisRigidBodyRef.current.rotation().y;
@@ -430,7 +443,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       if (bodyPosition.y < -10) {
         chassisRigidBodyRef.current.setTranslation(
           new Vector3(...spawn.position),
-          true,
+          true
         );
         const spawnRot = new Euler(...spawn.rotation);
         const spawnQuat = new Quaternion().setFromEuler(spawnRot);
@@ -535,5 +548,5 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         </group>
       </>
     );
-  },
+  }
 );

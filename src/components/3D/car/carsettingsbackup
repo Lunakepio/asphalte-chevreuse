@@ -1,0 +1,51 @@
+    const {
+      indexRightAxis,
+      indexForwardAxis,
+      indexUpAxis,
+      directionLocal: directionLocalArray,
+      axleLocal: axleLocalArray,
+      vehicleWidth,
+      vehicleHeight,
+      vehicleFront,
+      vehicleBack,
+      ...levaWheelOptions
+    } = useLeva(
+      "wheels",
+      {
+        radius: 0.38,
+
+        indexRightAxis: 2,
+        indexForwardAxis: 0,
+        indexUpAxis: 1,
+
+        directionLocal: [0, -1, 0],
+        axleLocal: [0, 0, 1],
+
+        // Suspension settings: stiffer springs, reduced travel for less body roll
+        suspensionStiffness: 15, // increased stiffness for better grip and responsiveness
+        suspensionRestLength: 0.4, // shorter rest length for a firmer feel
+        maxSuspensionForce: 60000, // higher force to maintain control under load
+        maxSuspensionTravel: 0.7, // reduced travel to limit excessive body movement
+
+        // Tire friction settings: more lateral grip and less slip
+        sideFrictionStiffness: 2.3, // increased lateral grip for fast cornering
+        frictionSlip: 1.4, // lower slip for improved traction during aggressive driving
+
+        // Damping adjustments: a bit higher to quickly settle the suspension
+        dampingRelaxation: 3.5, // increased for faster recovery after bumps
+        dampingCompression: 3.5, // matching compression damping for balanced behavior
+
+        rollInfluence: 0.02, // lower roll influence to minimize body roll
+
+        customSlidingRotationalSpeed: -15, // reduced sliding tendency for a grip car feel
+        useCustomSlidingRotationalSpeed: true,
+
+        // Acceleration settings: sharper throttle response for performance
+        forwardAcceleration: 2, // increased engine force for rapid acceleration
+        sideAcceleration: 2.7, // slightly lower to help keep the car stable in turns
+
+        vehicleWidth: 1.33,
+        vehicleHeight: 0.05,
+        vehicleFront: -1.13,
+        vehicleBack: 1.38,
+      },

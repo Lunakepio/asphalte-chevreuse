@@ -4,7 +4,7 @@ import { minRPM, maxRPM } from "../../../constants";
 import NumberFlow from "@number-flow/react";
 
 export const Gear = () => {
-  const numSegments = 16; // Total segments in the arc
+  const numSegments = 42; // Total segments in the arc
   const gear = useGameStore((state) => state.gear);
   const rpm = useGameStore((state) => state.rpm);
   const purpleThreshold = numSegments / 1.5;

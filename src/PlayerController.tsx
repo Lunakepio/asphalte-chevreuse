@@ -48,7 +48,7 @@ export const PlayerController = () => {
     {
       maxForce: 12.5,
       maxSteer: { value: Math.PI / 12, min: 0, max: Math.PI / 6 },
-      maxBrake: 0.5,
+      maxBrake: 0.15,
     },
     {
       collapsed: true,
@@ -186,8 +186,8 @@ export const PlayerController = () => {
 
     vehicle.setBrakeValue(brakeForce * 0.6, 0);
     vehicle.setBrakeValue(brakeForce * 0.6, 1);
-    vehicle.setBrakeValue(brakeForce * 0.2, 2);
-    vehicle.setBrakeValue(brakeForce * 0.2, 3);
+    vehicle.setBrakeValue(brakeForce * 0.6, 2);
+    vehicle.setBrakeValue(brakeForce * 0.6, 3);
 
     if (handbrake) {
       vehicle.setBrakeValue(brakeForce * 10, 2);

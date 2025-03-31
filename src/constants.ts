@@ -9,10 +9,10 @@ export const spawn = {
 export const maxRPM = 7000;
 export const minRPM = 1500;
 export const gears = [
-  { ratio: 4, maxSpeed: 40 }, // 1st gear: High torque, low speed
-  { ratio: 2.8, maxSpeed: 80 }, // 2nd gear
-  { ratio: 2.2, maxSpeed: 120 }, // 3rd gear
-  { ratio: 1.6, maxSpeed: 160 }, // 4th gear
-  { ratio: 1.2, maxSpeed: 220 }, // 5th gear
-  { ratio: 1.0, maxSpeed: 280 }, // 6th gear: Low torque, high speed
+  { ratio: 3.50, maxSpeed: 35 },  // 1st gear: Strong acceleration
+  { ratio: 2.20, maxSpeed: 75 },  // 2nd gear
+  { ratio: 1.60, maxSpeed: 110 }, // 3rd gear
+  { ratio: 1.20, maxSpeed: 150 }, // 4th gear
+  { ratio: 1.00, maxSpeed: 185 }, // 5th gear
+  { ratio: 0.82, maxSpeed: 240 }, // 6th gear: Cruising & efficiency
 ];
