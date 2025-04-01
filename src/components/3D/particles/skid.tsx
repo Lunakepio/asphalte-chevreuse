@@ -1,11 +1,11 @@
 import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import { extend, useFrame } from '@react-three/fiber';
 import { useRef, useMemo } from 'react';
-import { PlaneGeometry, MeshPhongMaterial, DoubleSide, Vector3, Euler, MeshNormalMaterial } from 'three';
+import { PlaneGeometry, Vector3, Euler, MeshPhongMaterial, FrontSide, } from 'three';
 
 extend({ InstancedMesh2 });
 
-export const Skid = ({ bottomLeftWheelObject, bottomRightWheelObject }) => {
+export const Skid = ({ bottomLeftWheelObject, bottomRightWheelObject, chasisMeshObject }) => {
   const ref = useRef(null);
   const lifeTime = 50;
   const size = 0.25;
@@ -16,15 +16,15 @@ export const Skid = ({ bottomLeftWheelObject, bottomRightWheelObject }) => {
   const wasSpinning = useRef(false);
 
   const geometry = useMemo(() => new PlaneGeometry(size, size), [size]);
-  // const material = useMemo(() => new MeshPhongMaterial({ color: 0x8C8C8C, transparent: true, depthWrite: false, side: DoubleSide }), []);
-  const material = new MeshNormalMaterial();
+  const material = useMemo(() => new MeshPhongMaterial({ color: 0x000000, transparent: true, depthWrite: false, side: FrontSide, opacity:0.3}), []);
+  // const material = new MeshNormalMaterial();
 
   useFrame((state, delta) => {
     if (!ref.current || !bottomLeftWheelObject.current || !bottomRightWheelObject.current) return;
 
     const leftPos = bottomLeftWheelObject.current.getWorldPosition(new Vector3());
     const rightPos = bottomRightWheelObject.current.getWorldPosition(new Vector3());
-    const rotationY = bottomLeftWheelObject.current.getWorldQuaternion(new Euler()).x;
+    const rotationY = chasisMeshObject.current.getWorldQuaternion(new Euler()).z;
     const isSpinning = bottomLeftWheelObject.current.isSpinning;
 
     if (isSpinning) {
@@ -68,5 +68,5 @@ export const Skid = ({ bottomLeftWheelObject, bottomRightWheelObject }) => {
     });
   });
 
-  return <instancedMesh2 ref={ref} args={[geometry, material, { createEntities: true }]} frustumCulled={false} />;
+  return <instancedMesh2 renderOrder={1} ref={ref} args={[geometry, material, { createEntities: true }]} frustumCulled={false} />;
 };

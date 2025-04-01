@@ -24,13 +24,13 @@ export function Chevreuse(props) {
   // materials['Material.009'].metalness=1;
   // materials['Material.010'].metalness=1;
   return (
-    <group {...props} scale={16} position={[-3.2, 5, -145]}>
+    <group {...props} scale={16} position={[-3.2, 6, -145]}>
       <group
         position={[3.939, -0.502, 0.629]}
         rotation={[-Math.PI / 2, 0, 0]}
         scale={0.183}
       >
-        <group rotation={[Math.PI / 2, 0, 0]}>
+        <group rotation={[Math.PI / 2, 0, 0]}>ww
           <group position={[0, 3.246, 0]} scale={[0.237, 3.249, 0.237]}>
             <mesh
               castShadow

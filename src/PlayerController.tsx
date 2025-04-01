@@ -19,6 +19,7 @@ export const PlayerController = () => {
   const setSpeed = useGameStore((state) => state.setSpeed);
   const setGear = useGameStore((state) => state.setGear);
   const setRpm = useGameStore((state) => state.setRpm);
+  const setIsClutchEngaged = useGameStore((state) => state.setIsClutchEngaged);
   const togglePause = useGameStore((state) => state.togglePause);
   const pause = useGameStore((state) => state.pause);
   const pausePressed = useKeyboardControls((state) => state.pause);
@@ -62,9 +63,10 @@ export const PlayerController = () => {
   const rpmRef = useRef(2000);
 
   const lastGearChangeTime = useRef(performance.now());
-  const gearChangeCooldown = 1000;
+  const gearChangeCooldown = 600;
   const isClutchEngaged = useRef(false);
   const distanceDone = useRef(0);
+  const addTime = useGameStore((state) => state.addTime);
 
   const updateGearbox = (speed: number, isBraking: boolean) => {
     const absSpeed = Math.max(0, Math.abs(speed));
@@ -158,8 +160,8 @@ export const PlayerController = () => {
     let engineForce = 0;
 
 
-    console.log(gameStarted);
     if(gameStarted){
+      addTime(deltaTime);
       if (forward) {
         const speedFactor = 1 - Math.pow(speedKmHour / gear.maxSpeed, 2.5);
         engineForce += maxForce * speedFactor * gear.ratio
@@ -214,6 +216,7 @@ export const PlayerController = () => {
       setSpeed(Math.floor(speedKmHour));
       setGear(currentGearRef.current);
       setRpm(Math.floor(rpmRef.current));
+      setIsClutchEngaged(isClutchEngaged.current);
 
     if (speedMetersPerSecond > 0) {
       addDistance(speedMetersPerSecond * deltaTime);

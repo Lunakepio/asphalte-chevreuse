@@ -1,4 +1,4 @@
-import { Helper, useKeyboardControls } from "@react-three/drei";
+import { Cylinder, Helper, useKeyboardControls } from "@react-three/drei";
 import {
   CuboidCollider,
   RapierRigidBody,
@@ -34,14 +34,15 @@ import {
   WheelOptions,
 } from "../../../lib/rapier-raycast-vehicle";
 import { M3 } from "./M3";
-import { ThreeElements, useFrame } from "@react-three/fiber";
+import { ThreeElements, useFrame, useThree } from "@react-three/fiber";
 import { WheelMesh } from "./wheel-mesh";
 import { spawn } from "../../../constants";
 import { data } from "../../../curves/curve";
 import { Smoke } from "../particles/smoke";
 import { Skid } from "../particles/skid";
 import { useGameStore } from "../../../store/store";
-import { curve1 } from "../../../curves/countdown/curve1";
+import { addInstancesToCollision } from "../particles/collision";
+import FakeFlame from "./fakeFlame";
 
 type WheelProps = ThreeElements["group"] & {
   side: "left" | "right";
@@ -92,7 +93,8 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const exhaustRef = useRef<Mesh>(null);
     const setAfk = useGameStore((state) => state.setAfk);
     const pause = useGameStore((state) => state.pause);
-
+    const collisionInstance = useGameStore((state) => state.collisionInstance);
+    const flameRef = useRef<Group>(null!);
     const topLeftWheelObject = useRef<Group>(null!);
     const topRightWheelObject = useRef<Group>(null!);
     const bottomLeftWheelObject = useRef<Group>(null!);
@@ -150,28 +152,28 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         directionLocal: [0, -1, 0],
         axleLocal: [0, 0, 1],
 
-  // Suspension settings: stiffer springs, reduced travel for less body roll
-  suspensionStiffness: 15, // increased stiffness for better grip and responsiveness
-  suspensionRestLength: 0.35, // shorter rest length for a firmer feel
-  maxSuspensionForce: 60000, // higher force to maintain control under load
-  maxSuspensionTravel: 0.25, // reduced travel to limit excessive body movement
+        // Suspension settings: stiffer springs, reduced travel for less body roll
+        suspensionStiffness: 15, // increased stiffness for better grip and responsiveness
+        suspensionRestLength: 0.4, // shorter rest length for a firmer feel
+        maxSuspensionForce: 80000, // higher force to maintain control under load
+        maxSuspensionTravel: 0.6, // reduced travel to limit excessive body movement
 
-  // Tire friction settings: more lateral grip and less slip
-  sideFrictionStiffness: 2.3, // increased lateral grip for fast cornering
-  frictionSlip: 3, // lower slip for improved traction during aggressive driving
+        // Tire friction settings: more lateral grip and less slip
+        sideFrictionStiffness: 2.3, // increased lateral grip for fast cornering
+        frictionSlip: 3, // lower slip for improved traction during aggressive driving
 
-  // Damping adjustments: a bit higher to quickly settle the suspension
-  dampingRelaxation: 3.5, // increased for faster recovery after bumps
-  dampingCompression: 3.5, // matching compression damping for balanced behavior
+        // Damping adjustments: a bit higher to quickly settle the suspension
+        dampingRelaxation: 3.5, // increased for faster recovery after bumps
+        dampingCompression: 3.5, // matching compression damping for balanced behavior
 
-  rollInfluence: 0.02, // lower roll influence to minimize body roll
+        rollInfluence: 0.02, // lower roll influence to minimize body roll
 
-  customSlidingRotationalSpeed: -15, // reduced sliding tendency for a grip car feel
-  useCustomSlidingRotationalSpeed: true,
+        customSlidingRotationalSpeed: -15, // reduced sliding tendency for a grip car feel
+        useCustomSlidingRotationalSpeed: true,
 
-  // Acceleration settings: sharper throttle response for performance
-  forwardAcceleration: 2, // increased engine force for rapid acceleration
-  sideAcceleration: 2.2, // slightly lower to help keep the car stable in turns
+        // Acceleration settings: sharper throttle response for performance
+        forwardAcceleration: 2, // increased engine force for rapid acceleration
+        sideAcceleration: 1.8, // slightly lower to help keep the car stable in turns
         vehicleWidth: 1.33,
         vehicleHeight: 0.05,
         vehicleFront: -1.13,
@@ -250,6 +252,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
       wheels,
     }));
+    const { camera } = useThree();
 
     useEffect(() => {
       vehicleRef.current = new RapierRaycastVehicle({
@@ -266,6 +269,13 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       }
 
       vehicleRef.current = vehicleRef.current;
+      if (cameraPositionRef.current && cameraTargetRef.current) {
+        // init the camera
+
+        camera.position.copy(
+          cameraPositionRef.current.getWorldPosition(new Vector3())
+        );
+      }
     }, [
       chassisRigidBodyRef,
       vehicleRef,
@@ -291,16 +301,18 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
     let afk = false;
     let afkTimer = 0;
-    const afkThreshold = 4;
+    const afkThreshold = 10;
     const [, get] = useKeyboardControls();
     const frameRate = 60;
     const animationDuration = 1;
     const cameraSpeedFactor = 1 / (frameRate * animationDuration);
-    let currentPoint = curve1.length - 1;
+    let currentPoint = data.length - 1;
 
     let turningTime = 0;
     const turningThreshold = 0.3;
     const animationProgress = useRef(0);
+
+    let flameProgress = 0;
     useFrame((state, delta) => {
       if (
         !cameraPositionRef.current ||
@@ -312,6 +324,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       const deltaAdjusted = delta * 60;
       afkTimer += delta;
       const gameStarted = useGameStore.getState().gameStarted;
+      const clock = state.clock.getElapsedTime();
 
       const { forward, back, left, right, brake } = get();
       if (forward || back || left || right || brake) {
@@ -333,7 +346,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         }
       }
 
-      if (!afk && gameStarted) {
+      if (!afk) {
         state.camera.position.lerp(
           cameraPositionRef.current.getWorldPosition(new Vector3()),
           0.12 * deltaAdjusted
@@ -392,34 +405,8 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         }
       }
 
-      // if (!gameStarted) {
-      //   state.camera.lookAt(
-      //     chassisMeshRef.current.getWorldPosition(new Vector3()),
-      //   );
-
-      //   if (currentPoint > 0) {
-      //     const positionTarget = chassisMeshRef.current
-      //       .getWorldPosition(new Vector3())
-      //       .add(curve1[currentPoint]);
-      //     const distanceToTarget =
-      //       state.camera.position.distanceTo(positionTarget);
-      //     console.log(distanceToTarget)
-      //     if (distanceToTarget > 1) {
-      //       state.camera.position.copy(positionTarget);
-      //     } else {
-      //       state.camera.position.lerp(
-      //         positionTarget,
-      //         cameraSpeedFactor
-      //       );
-      //     }
-
-      //     if (state.camera.position.distanceTo(positionTarget) < 0.2) {
-      //       currentPoint -= 1;
-      //     }
-      //   }
-      // }
-
       const bodyPosition = chassisRigidBodyRef.current.translation();
+      // console.log(bodyPosition)
       // const yaw = chassisRigidBodyRef.current.rotation().y;
 
       // chassisRigidBodyRef.current.applyImpulse(
@@ -432,7 +419,16 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       } else {
         turningTime = 0;
       }
-
+      const isClutchEngaged = useGameStore.getState().isClutchEngaged;
+      if(isClutchEngaged){
+        flameProgress += delta;
+      } else {
+        flameProgress = 0;
+      }
+      const flameScale = isClutchEngaged && flameProgress < 0.15 ? 1 : 0;
+      flameRef.current.scale.set(flameScale, flameScale, flameScale);
+      
+ 
       const isSpinning =
         (Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) > 90 &&
           turningTime > turningThreshold) ||
@@ -463,6 +459,16 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           ref={chassisRigidBodyRef}
           mass={150}
           name="car"
+          onCollisionEnter={({ manifold }) => {
+            const position = new Vector3(
+              manifold.solverContactPoint(0).x,
+              manifold.solverContactPoint(0).y,
+              manifold.solverContactPoint(0).z
+            );
+            if(useGameStore.getState().gameStarted){
+              addInstancesToCollision(collisionInstance, position);
+            }
+          }}
         >
           <group ref={cameraPositionRef} {...cameraPositionControls}>
             {/* <boxGeometry args={[1, 1, 1]} /> */}
@@ -475,7 +481,24 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           {/* todo: change to convex hull */}
           <CuboidCollider args={[2, 0.4, 0.7]} />
           <M3 />
-
+          <group ref={flameRef} scale={0}>
+            <Cylinder
+              args={[0.1, 0, 1, 256, 32, true]}
+              position={[-2.4, -0.15, -0.55]}
+              rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
+              scale={0.9}
+            >
+              <FakeFlame />
+            </Cylinder>
+            <Cylinder
+              args={[0.1, 0, 1, 256, 32, true]}
+              position={[-2.4, -0.15, -0.45]}
+              rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
+              scale={0.9}
+            >
+              <FakeFlame />
+            </Cylinder>
+          </group>
           <mesh ref={chassisMeshRef}></mesh>
           <mesh ref={exhaustRef} position={[-2.3, -0.15, -0.45]}></mesh>
 
@@ -513,9 +536,11 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           {/* Chassis */}
         </RigidBody>
         <Smoke exhaustRef={exhaustRef} vehicleRef={vehicleRef} />
+
         <Skid
           bottomLeftWheelObject={bottomLeftWheelObject}
           bottomRightWheelObject={bottomRightWheelObject}
+          chasisMeshObject={chassisMeshRef}
         />
         {/* Wheels */}
         <group ref={topLeftWheelObject}>

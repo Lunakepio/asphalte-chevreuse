@@ -19,16 +19,16 @@ export const Smoke = ({ exhaustRef, vehicleRef }) => {
 
   const geometry = useMemo(() => new OctahedronGeometry(0.1, 1), []);
 
-  const material = useMemo(() => new MeshPhongMaterial({ color: 0xffffff, transparent: true, depthWrite: false }), []);
+  const material = useMemo(() => new MeshPhongMaterial({ emissive: 0xffffff, transparent: true, depthWrite: false }), []);
 
   useFrame((state, delta) => {
-    if (!ref.current || ref.current.instancesCount >= 50 || !exhaustRef.current) return;
+    if (!ref.current || ref.current.instancesCount >= 50 || !exhaustRef.current && !vehicleRef.current.state.currentVehicleSpeedKmHour) return;
     const kmh = Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour);
     const elapsedTime = state.clock.getElapsedTime();
     const interval = 0.4 - (Math.min(kmh, maxSpeedThreshold) / maxSpeedThreshold) * 0.25;
 
     const position = exhaustRef.current.getWorldPosition(new Vector3());
-    if(elapsedTime - time > interval){
+    if(elapsedTime - time > interval && kmh < 60){
       time = elapsedTime;
       ref.current.addInstances(1, (obj) => {
       obj.position.copy(position)
@@ -40,7 +40,6 @@ export const Smoke = ({ exhaustRef, vehicleRef }) => {
       obj.currentTime += delta;
       obj.position.addScaledVector(direction, speed * delta)
       obj.scale.addScalar(scaleMultiplier * delta);
-      // obj.opacity = Math.max(0, obj.opacity - delta * 1);
       obj.opacity = Math.max(0, lifeTime - obj.currentTime) * 0.8;
       
       if (obj.currentTime >= lifeTime + 1.5) {

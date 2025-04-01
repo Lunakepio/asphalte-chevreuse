@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { formatTime } from "../lib/formatTime";
 
 
 export const useGameStore = create((set, get) => ({
@@ -23,6 +24,14 @@ export const useGameStore = create((set, get) => ({
   togglePause: () => set({ pause: !get().pause }),
   showSuccess: false,
   setShowSuccess: (newShowSuccess) => set({ showSuccess: newShowSuccess }),
+  time: 0,
+  addTime: (delta) => set((state) => ({ time: state.time + delta })),
+  resetTime: () => set({ time: 0 }),
+  collisionInstance: null,
+  setCollisionInstance: (newCollisionInstance) => set({ collisionInstance: newCollisionInstance }),
+  showTime : () => console.log(formatTime(get().time)),
+  isClutchEngaged: false,
+  setIsClutchEngaged: (isClutchEngaged) => set({isClutchEngaged: isClutchEngaged}),
 }));
 
 

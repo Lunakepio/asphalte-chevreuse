@@ -101,7 +101,7 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
     const { brake } = get();
     materials["Material.006"].emissiveIntensity = THREE.MathUtils.lerp(
       materials["Material.006"].emissiveIntensity,
-      brake ? 1200 : 3,
+      brake ? 1200 : 10,
       0.1,
     );
 
