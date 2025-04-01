@@ -1,6 +1,7 @@
 import { Canvas, useLoader } from "@react-three/fiber";
 import { Physics, CuboidCollider, RigidBody } from "@react-three/rapier";
 import {
+  ContactShadows,
   Environment,
   KeyboardControls,
   OrbitControls,
@@ -63,14 +64,14 @@ export const Sketch = () => {
         }}
         flat
       >
-        <color attach="background" args={["#005249"]} />
-        <fog attach="fog" args={["#002523", 50, 150]} />
+        <color attach="background" args={["#001522"]} />
+        <fog attach="fog" args={["#001522", 0, 200]} />
         <Suspense fallback={null}>
           <Physics gravity={[0, -9.81, 0]} timeStep={"vary"} >
             <KeyboardControls map={controls}>
               <PlayerController />
-            </KeyboardControls>
-            {/* <OrbitControls/> */}
+            </KeyboardControls> 
+             {/* <OrbitControls/> */}
             <group position={[-520, 5, 1250]}>
               <Particles />
             </group>
@@ -93,7 +94,7 @@ export const Sketch = () => {
               </mesh>
             </RigidBody>
             {/* ground */}
-            {/* <RigidBody
+            <RigidBody
               type="fixed"
               position={[spawn.position[0], spawn.position[1]-8, spawn.position[2]]}
               colliders={false}
@@ -104,14 +105,14 @@ export const Sketch = () => {
                 <boxGeometry args={[500, 10, 500]} />
                 <meshStandardMaterial color="#AA3030" map={texture}/>
               </mesh>
-            </RigidBody>  */}
-            <Chevreuse />
+            </RigidBody> 
+            {/* <Chevreuse /> */}
             <Collision/>
           </Physics>
-          <Lighting />
-          <Composer />
-          <Environment preset="night" environmentIntensity={0.5} />
-          {/* <Perf/> */}
+          <Lighting /> 
+         {/* <Composer /> */}
+          <Environment preset="night" environmentIntensity={0.1} />
+          <Perf/>
         </Suspense>
         <Preload all />
         <Leva

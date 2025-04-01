@@ -32,6 +32,8 @@ export const useGameStore = create((set, get) => ({
   showTime : () => console.log(formatTime(get().time)),
   isClutchEngaged: false,
   setIsClutchEngaged: (isClutchEngaged) => set({isClutchEngaged: isClutchEngaged}),
+  playerPosition: null,
+  setPlayerPosition: (playerPosition) => set({playerPosition: playerPosition}),
 }));
 
 

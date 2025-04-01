@@ -22,7 +22,7 @@ void main() {
     vTimeOffset = timeOffset;
     vBlinkingSpeed = blinkingSpeed;
 
-    vec3 animatedPosition = position + direction * sin((uTime) + timeOffset);
+    vec3 animatedPosition = position + direction * sin((uTime * 2.) + timeOffset);
     vec4 mvPosition = modelViewMatrix * vec4(animatedPosition, 1.0);
     vDepth = -mvPosition.z; // Pass depth to fragment shader
 

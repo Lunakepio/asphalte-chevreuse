@@ -93,6 +93,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const exhaustRef = useRef<Mesh>(null);
     const setAfk = useGameStore((state) => state.setAfk);
     const pause = useGameStore((state) => state.pause);
+    const setPlayerPosition = useGameStore((state) => state.setPlayerPosition);
     const collisionInstance = useGameStore((state) => state.collisionInstance);
     const flameRef = useRef<Group>(null!);
     const topLeftWheelObject = useRef<Group>(null!);
@@ -449,6 +450,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       }
 
       setAfk(afk);
+      setPlayerPosition(chassisRigidBodyRef.current.translation());
     });
 
     return (
@@ -465,9 +467,9 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
               manifold.solverContactPoint(0).y,
               manifold.solverContactPoint(0).z
             );
-            if(useGameStore.getState().gameStarted){
+
               addInstancesToCollision(collisionInstance, position);
-            }
+            
           }}
         >
           <group ref={cameraPositionRef} {...cameraPositionControls}>

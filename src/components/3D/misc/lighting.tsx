@@ -1,10 +1,15 @@
 import { useControls as useLeva } from "leva";
+import { useFrame } from "@react-three/fiber";
+import { useGameStore } from "../../../store/store";
+import { DirectionalLight, CameraHelper } from "three";
+import { useRef } from "react";
+import { Helper } from "@react-three/drei";
 
 export const Lighting = () => {
   const ambientLightControls = useLeva(
     "AmbientLight",
     {
-      intensity: { value: 0.2, min: 0, max: 2, step: 0.1 },
+      intensity: { value: 0, min: 0, max: 2, step: 0.1 },
       color: { value: "#91ffe6" },
     },
     {
@@ -12,9 +17,51 @@ export const Lighting = () => {
     },
   );
 
+  const directionalLight = useRef<DirectionalLight>(null);
+
+  useFrame(() => {
+    const playerPosition = useGameStore.getState().playerPosition;
+    if (!playerPosition && !directionalLight.current) return;
+
+    directionalLight.current.position.x = playerPosition.x - 1;
+    directionalLight.current.target.position.x = playerPosition.x;
+
+    directionalLight.current.position.y = playerPosition.y + 5;
+    directionalLight.current.target.position.y = playerPosition.y;
+
+    directionalLight.current.position.z = playerPosition.z - 3;
+    directionalLight.current.target.position.z = playerPosition.z;
+
+    directionalLight.current.target.updateMatrixWorld();
+  });
+
   return (
     <>
-      <ambientLight {...ambientLightControls} />
+      {/* <ambientLight {...ambientLightControls} /> */}
+      <directionalLight
+      castShadow
+      ref={directionalLight}
+      position={[0, 0, 0]}
+      intensity={0.5}
+      color={"#add8e6"}
+      // shadow-normalBias={0.04}
+      shadow-bias={-0.1}
+      shadow-mapSize={[512, 512]}
+      // layers={1}
+      
+    >
+      <orthographicCamera
+        attach="shadow-camera"
+        near={1}
+        far={10}
+        top={10}
+        right={10}
+        left={-10}
+        bottom={-10}
+      >
+        {/* <Helper type={CameraHelper} /> */}
+      </orthographicCamera>
+    </directionalLight>
     </>
   );
 };

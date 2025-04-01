@@ -135,52 +135,44 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
       />
       <group position={[-0.006, 0.611, 0.573]} scale={0.055}>
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_64.geometry}
           material={materials["Material.013"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_65.geometry}
           material={materials["Material.012"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_66.geometry}
           material={materials["Material.011"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_67.geometry}
           material={materials["Material.010"]}
         />
       </group>
       <group position={[-0.006, 0.611, 0.573]} scale={0.055}>
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_69.geometry}
           material={materials["Material.013"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_70.geometry}
           material={materials["Material.012"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_71.geometry}
           material={materials["Material.011"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_72.geometry}
           material={materials["Material.010"]}
         />
@@ -190,40 +182,34 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
       </group>
       <group rotation={[-Math.PI / 2, 0, 0]} scale={0.031}>
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_84.geometry}
           material={materials["Material.013"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_85.geometry}
           material={materials["Material.007"]}
         />
       </group>
       <group position={[0.243, 0.611, 2.652]} scale={0.055}>
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_89.geometry}
           material={materials["Material.013"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_90.geometry}
           material={materials["Material.012"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_91.geometry}
           material={materials["Material.011"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_92.geometry}
           material={materials["Material.010"]}
         />
@@ -234,94 +220,81 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
         scale={0.265}
       >
         <mesh
-          castShadow
-          receiveShadow
+        castShadow
+        receiveShadow
           geometry={nodes.Object_108.geometry}
           material={materials["Material.001"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_109.geometry}
           >
             <meshStandardMaterial color="white" />
           </mesh>
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_110.geometry}
           material={materials["Material.003"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_111.geometry}
           material={materials["Material.004"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_112.geometry}
           material={materials["Material.005"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_113.geometry}
           material={materials["Material.006"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_114.geometry}
           material={materials["Material.007"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_115.geometry}
           material={materials["Material.014"]}
         />
       </group>
-      <group position={[0, 0.473, -0.751]} scale={[0.16, 0.225, 0.078]}>
+      {/* <group position={[0, 0.473, -0.751]} scale={[0.16, 0.225, 0.078]}>
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_96.geometry}
           material={materials["Material.014"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_97.geometry}
           material={materials["Material.008"]}
         />
-      </group>
+      </group> */}
       <group position={[0, 0.774, 0.995]} scale={0.161}>
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_101.geometry}
           material={materials["Material.007"]}
         />
         <mesh
-          castShadow
-          receiveShadow
+    
           geometry={nodes.Object_102.geometry}
           material={materials["Material.002"]}
         />
       </group>
       <mesh
-        castShadow
-        receiveShadow
+
         geometry={nodes.Object_62.geometry}
         material={materials["Material.008"]}
         position={[-0.006, 0.605, 0.573]}
         scale={0.055}
       />
       <mesh
-        castShadow
-        receiveShadow
+
         geometry={nodes.Object_87.geometry}
         material={materials["Material.003"]}
         position={[0.317, 0.524, -0.235]}
@@ -329,8 +302,7 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
         scale={0.076}
       />
       <mesh
-        castShadow
-        receiveShadow
+
         geometry={nodes.Object_94.geometry}
         material={materials["Material.003"]}
         position={[-0.057, 0.375, -0.417]}
@@ -338,16 +310,14 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
         scale={-0.006}
       />
       <mesh
-        castShadow
-        receiveShadow
+
         geometry={nodes.Object_99.geometry}
         material={materials["Material.014"]}
         position={[0, 0.473, -1.276]}
         scale={[0.16, 0.225, 0.078]}
       />
       <mesh
-        castShadow
-        receiveShadow
+
         geometry={nodes.Object_104.geometry}
         material={materials["Material.008"]}
         position={[0, 0.503, 0.676]}
@@ -355,8 +325,7 @@ export function M3(props: JSX.IntrinsicElements["group"]) {
         scale={[1, 1, 0.91]}
       />
       <mesh
-        castShadow
-        receiveShadow
+
         geometry={nodes.Object_106.geometry}
         material={materials["Material.003"]}
         position={[0.243, 0.622, -0.4]}
