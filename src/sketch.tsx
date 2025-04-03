@@ -20,11 +20,15 @@ import { useGameStore } from "./store/store";
 import { Perf } from "r3f-perf";
 import { spawn } from "./constants";
 
-import { Chevreuse } from "./components/3D/track/Chevreuse";
 
 import { Composer } from "./components/3D/postprocessing/composer";
 import { Particles } from "./components/3D/particles/particles";
 import { Collision } from "./components/3D/particles/collision";
+import { Model } from "./components/3D/track/Test-5";
+import { ChevreuseFinal } from "./components/3D/track/CHEVREUSE-FINAL";
+import { Grass } from "./components/3D/particles/grass";
+import { RenderTargetExample } from "./components/3D/misc/renderTarget";
+
 
 export const Sketch = () => {
   const { debug } = useLeva(
@@ -71,6 +75,7 @@ export const Sketch = () => {
             <KeyboardControls map={controls}>
               <PlayerController />
             </KeyboardControls> 
+            <Lighting /> 
              {/* <OrbitControls/> */}
             <group position={[-520, 5, 1250]}>
               <Particles />
@@ -103,16 +108,19 @@ export const Sketch = () => {
               <CuboidCollider args={[250, 5, 250]} />
               <mesh receiveShadow>
                 <boxGeometry args={[500, 10, 500]} />
-                <meshStandardMaterial color="#AA3030" map={texture}/>
+                <meshStandardMaterial color="#AA3030" map={texture} transparent={true} opacity={0.5}/>
               </mesh>
             </RigidBody> 
-            {/* <Chevreuse /> */}
             <Collision/>
+            {/* <Model/> */}
+            {/* <ChevreuseFinal/> */}
           </Physics>
-          <Lighting /> 
+
          {/* <Composer /> */}
-          <Environment preset="night" environmentIntensity={0.1} />
-          <Perf/>
+         <Grass/>
+          {/* <Environment preset="warehouse" environmentIntensity={1} /> */}
+          {/* <Perf/> */}
+          <RenderTargetExample />
         </Suspense>
         <Preload all />
         <Leva

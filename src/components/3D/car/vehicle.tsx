@@ -28,12 +28,13 @@ import {
   Euler,
   Quaternion,
   MathUtils,
+  PointLight,
 } from "three";
 import {
   RapierRaycastVehicle,
   WheelOptions,
 } from "../../../lib/rapier-raycast-vehicle";
-import { M3 } from "./M3";
+import { M3 } from "./M3-optimised";
 import { ThreeElements, useFrame, useThree } from "@react-three/fiber";
 import { WheelMesh } from "./wheel-mesh";
 import { spawn } from "../../../constants";
@@ -83,7 +84,6 @@ export type VehicleRef = {
 
 export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
   ({ children, ...groupProps }, ref) => {
-    const rapier = useRapier();
 
     const vehicleRef = useRef<RapierRaycastVehicle>(null!);
     const chassisRigidBodyRef = useRef<RapierRigidBody>(null!);
@@ -95,11 +95,13 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const pause = useGameStore((state) => state.pause);
     const setPlayerPosition = useGameStore((state) => state.setPlayerPosition);
     const collisionInstance = useGameStore((state) => state.collisionInstance);
+    const setGroundNormal = useGameStore((state) => state.setGroundNormal);
     const flameRef = useRef<Group>(null!);
     const topLeftWheelObject = useRef<Group>(null!);
     const topRightWheelObject = useRef<Group>(null!);
     const bottomLeftWheelObject = useRef<Group>(null!);
     const bottomRightWheelObject = useRef<Group>(null!);
+    const flameLightRef = useRef<PointLight>(null!);
     const { headlightsSpotLightHelper } = useLeva(
       "headlights",
       {
@@ -112,7 +114,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     const cameraPositionControls = useLeva(
       "Camera Position",
       {
-        position: { value: [-13, 18, 0], step: 0.1 },
+        position: { value: [-5, 18, 0], step: 0.1 },
         fov: { value: 44, min: 1, max: 180, step: 1 },
       },
       {
@@ -174,7 +176,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
         // Acceleration settings: sharper throttle response for performance
         forwardAcceleration: 2, // increased engine force for rapid acceleration
-        sideAcceleration: 1.8, // slightly lower to help keep the car stable in turns
+        sideAcceleration: 1.4, // slightly lower to help keep the car stable in turns
         vehicleWidth: 1.33,
         vehicleHeight: 0.05,
         vehicleFront: -1.13,
@@ -257,7 +259,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
     useEffect(() => {
       vehicleRef.current = new RapierRaycastVehicle({
-        world: rapier.world,
+        world: world,
         chassisRigidBody: chassisRigidBodyRef.current,
         indexRightAxis,
         indexForwardAxis,
@@ -302,7 +304,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
     let afk = false;
     let afkTimer = 0;
-    const afkThreshold = 10;
+    const afkThreshold = 7;
     const [, get] = useKeyboardControls();
     const frameRate = 60;
     const animationDuration = 1;
@@ -312,8 +314,9 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
     let turningTime = 0;
     const turningThreshold = 0.3;
     const animationProgress = useRef(0);
-
+    const damping = 4
     let flameProgress = 0;
+    const { world, rapier } = useRapier()
     useFrame((state, delta) => {
       if (
         !cameraPositionRef.current ||
@@ -348,26 +351,41 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       }
 
       if (!afk) {
-        state.camera.position.lerp(
-          cameraPositionRef.current.getWorldPosition(new Vector3()),
-          0.12 * deltaAdjusted
+        const targetPosition =  cameraPositionRef.current.getWorldPosition(new Vector3());
+        state.camera.position.x = MathUtils.damp(
+          state.camera.position.x,
+          targetPosition.x,
+          damping,
+          delta
+        );
+        state.camera.position.y = MathUtils.damp(
+          state.camera.position.y,
+          targetPosition.y,
+          damping,
+          delta
+        );
+        state.camera.position.z = MathUtils.damp(
+          state.camera.position.z,
+          targetPosition.z,
+          damping,
+          delta
         );
         state.camera.lookAt(
           cameraTargetRef.current.getWorldPosition(new Vector3())
         );
       }
 
-      cameraTargetRef.current.position.z = MathUtils.lerp(
-        cameraTargetRef.current.position.z,
-        left ? -2 : right ? 2 : 0,
-        0.01 * deltaAdjusted
-      );
+      // cameraTargetRef.current.position.z = MathUtils.lerp(
+      //   cameraTargetRef.current.position.z,
+      //   left ? -2 : right ? 2 : 0,
+      //   0.01 * deltaAdjusted
+      // );
 
-      cameraPositionRef.current.position.z = MathUtils.lerp(
-        cameraPositionRef.current.position.z,
-        left ? 5 : right ? -5 : 0,
-        0.01 * deltaAdjusted
-      );
+      // cameraPositionRef.current.position.z = MathUtils.lerp(
+      //   cameraPositionRef.current.position.z,
+      //   left ? 5 : right ? -5 : 0,
+      //   0.01 * deltaAdjusted
+      // );
 
       if (afk) {
         state.camera.lookAt(
@@ -407,6 +425,25 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
       }
 
       const bodyPosition = chassisRigidBodyRef.current.translation();
+      const offset = 0; // Adjust this value as needed
+      
+      // Start the ray slightly below the car's floor
+      const rayOrigin = {
+          x: bodyPosition.x,
+          y: bodyPosition.y - offset,
+          z: bodyPosition.z
+      };
+      
+      const ray = new rapier.Ray(rayOrigin, { x: 0, y: -1, z: 0 });
+      
+      const raycastResult = world.castRayAndGetNormal(ray, 1, true);
+      if (raycastResult) {
+          const normal = raycastResult.normal;
+          setGroundNormal(normal);
+      } else {
+          console.log("No intersection with the ground found.");
+      }
+      
       // console.log(bodyPosition)
       // const yaw = chassisRigidBodyRef.current.rotation().y;
 
@@ -427,27 +464,28 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         flameProgress = 0;
       }
       const flameScale = isClutchEngaged && flameProgress < 0.15 ? 1 : 0;
-      flameRef.current.scale.set(flameScale, flameScale, flameScale);
-      
+    
+      // flameRef.current.scale.set(flameScale, flameScale, flameScale);
+      flameRef.current.scale.lerp(new Vector3(flameScale, flameScale, flameScale), 1 * deltaAdjusted);
+      const flameLightIntensity = isClutchEngaged && flameProgress < 0.15 ? 6 : 0;
+      flameLightRef.current.intensity = MathUtils.lerp(flameLightRef.current.intensity, flameLightIntensity, 1 * deltaAdjusted);
  
-      const isSpinning =
-        (Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) > 90 &&
-          turningTime > turningThreshold) ||
-        brake;
+        // (Math.abs(vehicleRef.current.state.currentVehicleSpeedKmHour) > 90 &&
+        //   turningTime > turningThreshold) ||
+        // brake;
 
-      bottomLeftWheelObject.current.isSpinning = isSpinning;
-
-      if (bodyPosition.y < -10) {
-        chassisRigidBodyRef.current.setTranslation(
-          new Vector3(...spawn.position),
-          true
-        );
-        const spawnRot = new Euler(...spawn.rotation);
-        const spawnQuat = new Quaternion().setFromEuler(spawnRot);
-        chassisRigidBodyRef.current.setRotation(spawnQuat, true);
-        chassisRigidBodyRef.current.setLinvel(new Vector3(0, 0, 0), true);
-        chassisRigidBodyRef.current.setAngvel(new Vector3(0, 0, 0), true);
-      }
+      bottomLeftWheelObject.current.isSpinning = vehicleRef.current.state.sliding || brake;
+      // if (bodyPosition.y < -10) {
+      //   chassisRigidBodyRef.current.setTranslation(
+      //     new Vector3(...spawn.position),
+      //     true
+      //   );
+      //   const spawnRot = new Euler(...spawn.rotation);
+      //   const spawnQuat = new Quaternion().setFromEuler(spawnRot);
+      //   chassisRigidBodyRef.current.setRotation(spawnQuat, true);
+      //   chassisRigidBodyRef.current.setLinvel(new Vector3(0, 0, 0), true);
+      //   chassisRigidBodyRef.current.setAngvel(new Vector3(0, 0, 0), true);
+      // }
 
       setAfk(afk);
       setPlayerPosition(chassisRigidBodyRef.current.translation());
@@ -502,7 +540,9 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
             </Cylinder>
           </group>
           <mesh ref={chassisMeshRef}></mesh>
-          <mesh ref={exhaustRef} position={[-2.3, -0.15, -0.45]}></mesh>
+          <group ref={exhaustRef} position={[-2.2, -0.15, -0.45]}>
+          <pointLight position={[.2, 0,0]} intensity={0} color={"#ffa500"} ref={flameLightRef} />
+          </group>
 
           {/* Headlights */}
           {[

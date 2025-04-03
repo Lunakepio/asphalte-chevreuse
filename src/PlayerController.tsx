@@ -25,11 +25,11 @@ export const PlayerController = () => {
   const pausePressed = useKeyboardControls((state) => state.pause);
   
 
-  useEffect(() => {
-    if (pausePressed) {
-      togglePause();
-    }
-  }, [pausePressed, togglePause]);
+  // useEffect(() => {
+  //   if (pausePressed) {
+  //     togglePause();
+  //   }
+  // }, [pausePressed, togglePause]);
 
   const { cameraMode } = useLeva(
     "camera",
@@ -130,7 +130,7 @@ export const PlayerController = () => {
     }
 
     if(pause){
-      world.sleep();
+      world.timestep = 0;
     }
     const timestep = world.timestep;
     const currentTime = performance.now() / 1000;
@@ -238,7 +238,7 @@ export const PlayerController = () => {
       {/* raycast vehicle */}
       <Vehicle
         ref={raycastVehicle}
-        position={[-7, 2, -130]}
+        position={[0, 3, 0]}
         rotation={[0, -Math.PI / 2, 0]}
       />
 

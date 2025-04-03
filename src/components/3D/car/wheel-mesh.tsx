@@ -37,10 +37,10 @@ export const WheelMesh = (props: JSX.IntrinsicElements['group']) => {
   return (
     <group {...props} dispose={null}>
       <group scale={0.328}>
-        <mesh castShadow receiveShadow geometry={nodes.Object_55.geometry} material={materials['Material.008']} />
-        <mesh castShadow receiveShadow geometry={nodes.Object_55_1.geometry} material={materials['Material.007']} />
-        <mesh castShadow receiveShadow geometry={nodes.Object_55_2.geometry} material={materials['Material.009']} />
-        <mesh castShadow receiveShadow geometry={nodes.Object_55_3.geometry} material={materials['Material.002']} />
+        <mesh  geometry={nodes.Object_55.geometry} material={materials['Material.008']} />
+        <mesh  geometry={nodes.Object_55_1.geometry} material={materials['Material.007']} />
+        <mesh  geometry={nodes.Object_55_2.geometry} material={materials['Material.009']} />
+        <mesh  geometry={nodes.Object_55_3.geometry} material={materials['Material.002']} />
       </group>
     </group>
   )

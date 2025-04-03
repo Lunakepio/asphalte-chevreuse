@@ -16,6 +16,7 @@ export const Countdown = () => {
   const setGameStarted = useGameStore(state => state.setGameStarted);
   const count = useGameStore(state => state.count);
   const setCount = useGameStore(state => state.setCount);
+  const [isFinished, setIsFinished] = useState(false);
 
   useGSAP(() => {
     setTimeout(() => {
@@ -65,7 +66,7 @@ export const Countdown = () => {
   useGSAP(() => {
     if (count === 1) {
       gsap.to(countdownRef.current, {
-        opacity: 0,
+        autoAlpha: 0,
         duration: 0.2,
         delay: 1,
       });
@@ -75,22 +76,35 @@ export const Countdown = () => {
         delay: 1,
         onComplete: () => {
           setGameStarted(true);
-          gsap.to(startRef.current, {
+          const tl = gsap.timeline();
+          tl.to(startRef.current, {
             opacity: 1,
-            duration: 2,
+            duration: 0.2,
             scale: 1,
             ease: "power4.out",
-            onComplete: () => {
-              gsap.to(startRef.current, {
-                opacity: 0,
-                duration: 0.2,
-              });
-            },
+          });
+          tl.to(startRef.current, {
+            duration: 2,
+            scale: 1,
+            delay: -0.2,
+            ease: "power4.out",
+          });
+          tl.to(startRef.current, {
+            autoAlpha: 0,
+            scale: 3,
+            duration: 0.3,
+            onComplete:()=>{
+              setIsFinished(true);
+            }
           });
         },
       });
     }
   }, [count]);
+
+  if(isFinished){
+    return null;
+  }
   
   return (
     <div className="countdown">

@@ -34,6 +34,10 @@ export const useGameStore = create((set, get) => ({
   setIsClutchEngaged: (isClutchEngaged) => set({isClutchEngaged: isClutchEngaged}),
   playerPosition: null,
   setPlayerPosition: (playerPosition) => set({playerPosition: playerPosition}),
+  groundNormal: null,
+  setGroundNormal: (groundNormal) => set({groundNormal: groundNormal}),
+  roadRenderTarget: null,
+  setRoadRenderTarget: (roadRenderTarget) => set({roadRenderTarget: roadRenderTarget})
 }));
 
 

@@ -42,7 +42,7 @@ export const Lighting = () => {
       castShadow
       ref={directionalLight}
       position={[0, 0, 0]}
-      intensity={0.5}
+      intensity={0.6}
       color={"#add8e6"}
       // shadow-normalBias={0.04}
       shadow-bias={-0.1}
