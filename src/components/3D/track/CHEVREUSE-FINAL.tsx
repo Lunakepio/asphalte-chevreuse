@@ -52,7 +52,7 @@ export function ChevreuseFinal(props: JSX.IntrinsicElements["group"]) {
           material={materials["Material.001"]}
         />
         <mesh layers={1} geometry={nodes.Plane_1.geometry}>
-          <meshBasicMaterial color={"#ffffff"} />
+          <meshBasicMaterial color={"#ffffff"} depthTest={false} depthWrite={false} fog={false} />
         </mesh>
         <mesh
           receiveShadow
@@ -61,7 +61,7 @@ export function ChevreuseFinal(props: JSX.IntrinsicElements["group"]) {
           position={[0, 0.001, 0]}
         />
         <mesh layers={1} geometry={nodes.Plane_2.geometry}>
-          <meshBasicMaterial color={"#ffffff"} />
+          <meshBasicMaterial color={"#ffffff"} depthTest={false} depthWrite={false} fog={false} />
         </mesh>
         <mesh
           receiveShadow
@@ -69,7 +69,7 @@ export function ChevreuseFinal(props: JSX.IntrinsicElements["group"]) {
           material={materials["Material.003"]}
         />
         <mesh layers={1} geometry={nodes.Plane_3.geometry}>
-          <meshBasicMaterial color={"#ffffff"} />
+          <meshBasicMaterial color={"#ffffff"} depthTest={false} depthWrite={false} fog={false} />
         </mesh>
       </RigidBody>
     </group>

@@ -72,15 +72,17 @@ export const RenderTargetExample = () => {
     perspectiveCameraRef.current.position.copy(camera.position);
     perspectiveCameraRef.current.quaternion.copy(camera.quaternion);
     perspectiveCameraRef.current.updateProjectionMatrix();
-    const {x, y, z } = useGameStore.getState().playerPosition;
-    // planeRef.current.position.set(x, y+ 5 , z)
-    // planeRef.current.lookAt(camera.position)
+
 
     gl.setRenderTarget(renderTarget);
     gl.render(scene, perspectiveCameraRef.current);
     gl.setRenderTarget(null);
     setRoaderRenderTarget(renderTarget.texture);
 
+    // const {x, y, z } = useGameStore.getState().playerPosition;
+    // planeRef.current.position.set(x, y+ 5 , z)
+    // planeRef.current.lookAt(camera.position)
+    // 
     // if (planeRef.current) {
     //   planeRef.current.material.uniforms.renderTargetTexture.value = renderTarget.texture;
       

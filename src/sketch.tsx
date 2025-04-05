@@ -13,6 +13,7 @@ import { PlayerController } from "./PlayerController";
 import { Lighting } from "./components/3D/misc/lighting";
 import {
   ACESFilmicToneMapping,
+  BackSide,
   ReinhardToneMapping,
   TextureLoader,
 } from "three";
@@ -28,6 +29,8 @@ import { Model } from "./components/3D/track/Test-5";
 import { ChevreuseFinal } from "./components/3D/track/CHEVREUSE-FINAL";
 import { Grass } from "./components/3D/particles/grass";
 import { RenderTargetExample } from "./components/3D/misc/renderTarget";
+import { EnvironmentSphere } from "./components/3D/misc/EnvironmentSphere";
+import { Stars } from "./components/3D/particles/stars";
 
 
 export const Sketch = () => {
@@ -69,15 +72,18 @@ export const Sketch = () => {
         flat
       >
         <color attach="background" args={["#001522"]} />
-        <fog attach="fog" args={["#001522", 0, 200]} />
+        <fog attach="fog" args={["#003046", 0, 200]} />
         <Suspense fallback={null}>
           <Physics gravity={[0, -9.81, 0]} timeStep={"vary"} >
             <KeyboardControls map={controls}>
               <PlayerController />
             </KeyboardControls> 
+            {/* <Grass/> */}
+
             <Lighting /> 
-             {/* <OrbitControls/> */}
-            <group position={[-520, 5, 1250]}>
+            <Stars/>
+             <OrbitControls/>
+            <group position={[0, 0, 0]}>
               <Particles />
             </group>
             <RigidBody
@@ -99,7 +105,7 @@ export const Sketch = () => {
               </mesh>
             </RigidBody>
             {/* ground */}
-            <RigidBody
+            {/* <RigidBody
               type="fixed"
               position={[spawn.position[0], spawn.position[1]-8, spawn.position[2]]}
               colliders={false}
@@ -110,15 +116,21 @@ export const Sketch = () => {
                 <boxGeometry args={[500, 10, 500]} />
                 <meshStandardMaterial color="#AA3030" map={texture} transparent={true} opacity={0.5}/>
               </mesh>
-            </RigidBody> 
+            </RigidBody>  */}
             <Collision/>
             {/* <Model/> */}
-            {/* <ChevreuseFinal/> */}
+            <ChevreuseFinal/>
           </Physics>
 
          {/* <Composer /> */}
-         <Grass/>
-          {/* <Environment preset="warehouse" environmentIntensity={1} /> */}
+         <Environment preset="night" background resolution={256} blur={1} environmentIntensity={0.5}>
+           <EnvironmentSphere/>
+         </Environment>
+         
+         {/* <mesh position={[0, 0, 0]}> // test environment
+           <sphereGeometry args={[1, 32, 32]} />
+           <meshStandardMaterial metalness={1} roughness={0} envMapIntensity={10} />
+         </mesh> */}
           {/* <Perf/> */}
           <RenderTargetExample />
         </Suspense>

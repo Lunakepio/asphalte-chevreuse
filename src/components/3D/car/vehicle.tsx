@@ -325,6 +325,7 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
         pause
       )
         return;
+      
       const deltaAdjusted = delta * 60;
       afkTimer += delta;
       const gameStarted = useGameStore.getState().gameStarted;

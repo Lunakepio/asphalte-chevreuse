@@ -10,7 +10,7 @@ export const Lighting = () => {
     "AmbientLight",
     {
       intensity: { value: 0, min: 0, max: 2, step: 0.1 },
-      color: { value: "#91ffe6" },
+      color: { value: "#0034db" },
     },
     {
       collapsed: true,
@@ -37,12 +37,12 @@ export const Lighting = () => {
 
   return (
     <>
-      {/* <ambientLight {...ambientLightControls} /> */}
+      <ambientLight {...ambientLightControls} />
       <directionalLight
       castShadow
       ref={directionalLight}
       position={[0, 0, 0]}
-      intensity={0.6}
+      intensity={1}
       color={"#add8e6"}
       // shadow-normalBias={0.04}
       shadow-bias={-0.1}

@@ -68,7 +68,7 @@ export const Grass = () => {
   
       csm_Position = finalPosition;
   
-      // csm_PositionRaw = modelViewMatrix * vec4(finalPosition, 0.);
+      csm_PositionRaw = modelViewMatrix * vec4(finalPosition, 1.);
   
       // csm_Normal = recalcNormals(csm_PositionRaw);
     }`;
@@ -83,7 +83,7 @@ export const Grass = () => {
     uniform vec2 viewport;
 
     void main() {
-      vec2 maskUv = gl_FragCoord.xy / viewport;
+      vec2 maskUv = gl_FragCoord.xy / viewport / 2.0;
 
       vec4 maskColor = texture2D(grassMask, maskUv);
 
@@ -93,9 +93,9 @@ export const Grass = () => {
         discard;
       }
 
-      vec3 color = vec3(0.0);
-      color.g = max(0.0, vPosition.y); // Green intensity from Y
-      csm_DiffuseColor = vec4(color, 1.0);
+      // vec3 color = vec3(0.0);
+      // color.g = max(0.0, vPosition.y); // Green intensity from Y
+      // csm_DiffuseColor = vec4(color, 1.0);
     }`;
 
   const size = 300;
