@@ -25,12 +25,15 @@ import { spawn } from "./constants";
 import { Composer } from "./components/3D/postprocessing/composer";
 import { Particles } from "./components/3D/particles/particles";
 import { Collision } from "./components/3D/particles/collision";
-import { Model } from "./components/3D/track/Test-5";
 import { ChevreuseFinal } from "./components/3D/track/CHEVREUSE-FINAL";
 import { Grass } from "./components/3D/particles/grass";
 import { RenderTargetExample } from "./components/3D/misc/renderTarget";
 import { EnvironmentSphere } from "./components/3D/misc/EnvironmentSphere";
 import { Stars } from "./components/3D/particles/stars";
+import { ChevreuseTest } from "./components/3D/track/Chevreuse-test";
+import { Model } from "./components/3D/track/Model";
+import { audioManager } from "./AudioManager";
+import { AudioSetup } from "./AudioSetup";
 
 
 export const Sketch = () => {
@@ -43,6 +46,14 @@ export const Sketch = () => {
       collapsed: true,
     }
   );
+
+  useEffect(() => {
+    if(audioManager){
+      audioManager.load('engine-loop', '/sounds/car/engine-loop.mp3')
+      audioManager.load('exhaust-pop', '/sounds/car/pop.mp3')
+      audioManager.load('brakes', '/sounds/car/brakes.mp3')
+    }
+  })
 
   const controls = [
     { name: "forward", keys: ["ArrowUp", "KeyW"] },
@@ -63,7 +74,7 @@ export const Sketch = () => {
     <>
       <Canvas
         shadows
-        camera={{ fov: 90, far: 1000 }}
+        camera={{ fov: 90, far: 1500 }}
         gl={{
           antialias: true,
           powerPreference: "high-performance",
@@ -82,7 +93,7 @@ export const Sketch = () => {
 
             <Lighting /> 
             <Stars/>
-             <OrbitControls/>
+             {/* <OrbitControls/> */}
             <group position={[0, 0, 0]}>
               <Particles />
             </group>
@@ -104,8 +115,9 @@ export const Sketch = () => {
                 <meshStandardMaterial color="#AA3030" wireframe />
               </mesh>
             </RigidBody>
+            <AudioSetup />
             {/* ground */}
-            {/* <RigidBody
+            <RigidBody
               type="fixed"
               position={[spawn.position[0], spawn.position[1]-8, spawn.position[2]]}
               colliders={false}
@@ -116,16 +128,14 @@ export const Sketch = () => {
                 <boxGeometry args={[500, 10, 500]} />
                 <meshStandardMaterial color="#AA3030" map={texture} transparent={true} opacity={0.5}/>
               </mesh>
-            </RigidBody>  */}
+            </RigidBody> 
             <Collision/>
-            {/* <Model/> */}
-            <ChevreuseFinal/>
+            {/* <ChevreuseTest /> */}
           </Physics>
 
+{/* <Perf/> */}
          {/* <Composer /> */}
-         <Environment preset="night" background resolution={256} blur={1} environmentIntensity={0.5}>
-           <EnvironmentSphere/>
-         </Environment>
+         <EnvironmentSphere />
          
          {/* <mesh position={[0, 0, 0]}> // test environment
            <sphereGeometry args={[1, 32, 32]} />

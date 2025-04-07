@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import PropTypes from "prop-types";
+import { useGameStore } from "../../../store/store";
 
 const vertexShader = /* glsl */ `
 void main() {
@@ -18,7 +19,7 @@ void main() {
 
 export const Stars = ({
   count = 1000,
-  distance = 1000,
+  distance = 1500,
 }) => {
   const pointsRef = useRef();
   const geometry = useMemo(() => {
@@ -39,6 +40,12 @@ export const Stars = ({
     );
     return geometry;
   }, [count, distance]);
+
+  useFrame(() => {
+    if(!pointsRef.current) return;
+    const {x,y,z} = useGameStore.getState().playerPosition;
+    pointsRef.current.position.set(x,y,z);
+  })
 
   return (
     <points ref={pointsRef} geometry={geometry}>

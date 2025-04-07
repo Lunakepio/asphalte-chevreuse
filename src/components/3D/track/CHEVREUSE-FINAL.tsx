@@ -29,6 +29,7 @@ export function ChevreuseFinal(props: JSX.IntrinsicElements["group"]) {
   const { nodes, materials } = useGLTF("/CHEVREUSE-FINAL-2.glb") as GLTFResult;
    const matcap = useLoader(TextureLoader, "/matcap.png");
      const StandardMaterial = useMemo(() => new MeshStandardMaterial({ map: matcap, roughness: 0.5, metalness: 0.5 }), [matcap]);
+    //  materials["Material.001"] = new THREE.MeshToonMaterial({ color: 0x2f2f2f, side: THREE.DoubleSide });
    
   return (
     <group

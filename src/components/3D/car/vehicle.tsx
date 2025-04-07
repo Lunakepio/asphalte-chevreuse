@@ -1,4 +1,4 @@
-import { Cylinder, Helper, useKeyboardControls } from "@react-three/drei";
+import { Cylinder, Helper, PositionalAudio, useKeyboardControls } from "@react-three/drei";
 import {
   CuboidCollider,
   RapierRigidBody,
@@ -304,16 +304,12 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
 
     let afk = false;
     let afkTimer = 0;
-    const afkThreshold = 7;
+    const afkThreshold = 4;
     const [, get] = useKeyboardControls();
-    const frameRate = 60;
-    const animationDuration = 1;
-    const cameraSpeedFactor = 1 / (frameRate * animationDuration);
     let currentPoint = data.length - 1;
 
     let turningTime = 0;
-    const turningThreshold = 0.3;
-    const animationProgress = useRef(0);
+
     const damping = 4
     let flameProgress = 0;
     const { world, rapier } = useRapier()
@@ -406,9 +402,23 @@ export const Vehicle = forwardRef<VehicleRef, VehicleProps>(
           if (distanceToPrev > discontinuityThreshold) {
             state.camera.position.copy(positionTarget);
           } else {
-            state.camera.position.lerp(
-              positionTarget,
-              cameraSpeedFactor * deltaAdjusted
+            state.camera.position.x = MathUtils.damp(
+              state.camera.position.x,
+              positionTarget.x,
+              damping -2,
+              delta
+            );
+            state.camera.position.y = MathUtils.damp(
+              state.camera.position.y,
+              positionTarget.y,
+              damping -2,
+              delta
+            );
+            state.camera.position.z = MathUtils.damp(
+              state.camera.position.z,
+              positionTarget.z,
+              damping -2,
+              delta
             );
           }
 

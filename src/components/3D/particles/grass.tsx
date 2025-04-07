@@ -83,7 +83,7 @@ export const Grass = () => {
     uniform vec2 viewport;
 
     void main() {
-      vec2 maskUv = gl_FragCoord.xy / viewport / 2.0;
+      vec2 maskUv = gl_FragCoord.xy / viewport;
 
       vec4 maskColor = texture2D(grassMask, maskUv);
 
@@ -99,7 +99,7 @@ export const Grass = () => {
     }`;
 
   const size = 300;
-  const count = 50000;
+  const count = 250000;
 
   useEffect(() => {
     if (materialRef.current) {
@@ -119,7 +119,7 @@ export const Grass = () => {
 
       const center = [centerX, centerY, centerZ];
 
-      const halfWidth = 0.3;
+      const halfWidth = 0.1;
       const height = Math.random() + 1;
 
       const v1 = [centerX - halfWidth, centerY, centerZ];

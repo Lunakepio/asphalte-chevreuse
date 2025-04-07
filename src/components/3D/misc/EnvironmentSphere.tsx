@@ -1,9 +1,9 @@
+import { Environment } from "@react-three/drei";
 import { BackSide, Color } from "three";
 
 export const EnvironmentSphere = () => {
-
-  const color1 = '#001522 ';
-  const color2 = '#000010';
+  const color1 = "#001522 ";
+  const color2 = "#000010";
 
   // Convert hex colors to RGB
   const hexToRgb = (hex) => {
@@ -40,21 +40,23 @@ export const EnvironmentSphere = () => {
   `;
 
   return (
-    <mesh
-      position={[0, 0, 0]}
-      scale={[1000, 1000, 1000]}
-      rotation={[0, 0, 0]}
-    >
-      <sphereGeometry args={[1, 32, 32]} />
-      <shaderMaterial
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={{
-          color1: { value: new Color(r1, g1, b1) },
-          color2: { value: new Color(r2, g2, b2) }
-        }}
-        side={BackSide}
-      />
-    </mesh>
+    <Environment background blur={1}>
+      <mesh
+        position={[0, 0, 0]}
+        scale={[1200, 1200, 1200]}
+        rotation={[0, 0, 0]}
+      >
+        <sphereGeometry args={[1, 32, 32]} />
+        <shaderMaterial
+          vertexShader={vertexShader}
+          fragmentShader={fragmentShader}
+          uniforms={{
+            color1: { value: new Color(r1, g1, b1) },
+            color2: { value: new Color(r2, g2, b2) },
+          }}
+          side={BackSide}
+        />
+      </mesh>
+    </Environment>
   );
 };
