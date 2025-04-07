@@ -57,6 +57,11 @@ export const PlayerController = () => {
         volume: 0.3,
         playbackRate: 0.5,
       });
+      audioManager.play("wind", {
+        loop: true,
+        volume: 0.3,
+        playbackRate: 0.5,
+      });
     }
   }, []);
   const currentSteering = useRef(0);
@@ -70,7 +75,7 @@ export const PlayerController = () => {
   const isClutchEngaged = useRef(false);
   const distanceDone = useRef(0);
   const addTime = useGameStore((state) => state.addTime);
-  const brakeSound = useRef(0);
+  const brakeSoundRef = useRef(0);
 
   const updateGearbox = (speed: number, isBraking: boolean) => {
     const absSpeed = Math.max(0, Math.abs(speed));
@@ -228,20 +233,34 @@ export const PlayerController = () => {
     }
   });
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (cameraMode !== "drive" || pause) return;
-
+  
     const chassis = raycastVehicle.current?.chassisRigidBody;
     if (!chassis?.current) return;
-
+  
     chassisRotation.copy(chassis.current.rotation() as Quaternion);
     chassisTranslation.copy(chassis.current.translation() as Vector3);
+  
+    const { brake } = get();
+  
+  
+    if (brake && !audioManager.isPlaying('brakes')) {
+      audioManager.play('brakes', { volume: 0 });
+    } else if (!brake && brakeSoundRef.current >= 0) {
+      audioManager.stop('brakes');
+    }
 
-    const normalizedRPM = Math.min(Math.max(rpmRef.current / 7000, 0), 1); // normalize
+    brakeSoundRef.current = MathUtils.lerp(brakeSoundRef.current, Number(brake) * 0.3, 0.1 * delta * 60);
+  
+    const normalizedRPM = Math.min(Math.max(rpmRef.current / 7000, 0), 1);
     const volume = 0.2 + normalizedRPM * 0.8;
-    const playbackRate = 0.2 + normalizedRPM * 1.5;
-
+    const playbackRate = 0.2 + normalizedRPM * 1.2;
+  
+    const windPlaybackRate = playbackRate * 0.5;
     audioManager.update("engine-loop", { volume, playbackRate });
+    audioManager.update("wind", { volume, playbackRate: windPlaybackRate });
+    audioManager.update('brakes', { volume: brakeSoundRef.current });
   }, AFTER_RAPIER_UPDATE);
 
   return (

@@ -52,6 +52,7 @@ export const Sketch = () => {
       audioManager.load('engine-loop', '/sounds/car/engine-loop.mp3')
       audioManager.load('exhaust-pop', '/sounds/car/pop.mp3')
       audioManager.load('brakes', '/sounds/car/brakes.mp3')
+      audioManager.load('wind', '/sounds/car/wind.mp3')
     }
   })
 

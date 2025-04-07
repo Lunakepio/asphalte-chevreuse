@@ -30,23 +30,31 @@ class AudioManager {
       console.warn(`Sound "${name}" not loaded`);
       return;
     }
-
+  
     const existing = this.activeSounds.get(name);
     if (existing && options?.loop) {
       return;
     }
-
+    if (this.activeSounds.has(name)) {
+      return;
+    }
+  
     const sound = new THREE.Audio(this.listener);
     sound.setBuffer(buffer);
     sound.setLoop(options?.loop ?? false);
     sound.setVolume(options?.volume ?? 0.5);
     sound.setPlaybackRate(options?.playbackRate ?? 1.0);
     sound.play();
-
-    if (options?.loop) {
-      this.activeSounds.set(name, sound);
+  
+    this.activeSounds.set(name, sound); // <-- always store it
+  
+    if (!options?.loop) {
+      sound.source.onended = () => {
+        this.activeSounds.delete(name);
+      };
     }
   }
+  
 
   stop(name: string) {
     const sound = this.activeSounds.get(name);
@@ -56,6 +64,12 @@ class AudioManager {
     }
   }
 
+  getVolume(name: string) {
+    const sound = this.activeSounds.get(name);
+    if (!sound) return 0;
+    return sound.getVolume();
+  }
+  
   update(name: string, updates: { volume?: number; playbackRate?: number }) {
     const sound = this.activeSounds.get(name);
     if (!sound) return;
